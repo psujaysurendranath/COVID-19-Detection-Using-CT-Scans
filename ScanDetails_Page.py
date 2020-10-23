@@ -42,7 +42,7 @@ class ScanDetails_Page(tk.Frame):
             self.im.save('Patient Data/' + last_patient_id + '/' + last_patient_id+'_scan.png')
         
 
-        head = tk.Label(self, text = "COVID-19 PREDICTION USING X-RAYS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN)
+        head = tk.Label(self, text = "COVID-19 PREDICTION USING CT-SCANS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN)
         head.place(relx = 0.5, y = 20, anchor = tk.CENTER)
 
 

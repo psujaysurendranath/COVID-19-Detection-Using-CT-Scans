@@ -134,7 +134,7 @@ class Registration_Page(tk.Frame):
             patient_file_read.close()'''
 
 
-        head = tk.Label(self, text = "COVID-19 PREDICTION USING X-RAYS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN)
+        head = tk.Label(self, text = "COVID-19 PREDICTION USING CT-SCANS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN)
         head.place(relx = 0.5, y = 20, anchor = tk.CENTER)
 
 
