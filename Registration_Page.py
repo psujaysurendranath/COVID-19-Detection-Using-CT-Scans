@@ -24,52 +24,50 @@ class Registration_Page(tk.Frame):
         Height_var = tk.StringVar()
 
 
-        #nextWin = None
-
         Error_Label = {}
         
-        def Entrycheck():
-            entry_check_list = {}
-            for widg in Error_Label.values():
-                if widg.winfo_exists():
-                    widg.destroy()
-
+        def EntryCheck():
             rad_btn_count = 1
             
             for widg in self.winfo_children():
-                if type(widg) not in (tk.Label, tk.Radiobutton, tk.OptionMenu, tk.Button):
-                    if widg.get() and 'enter' not in widg.get().lower():
-                        print(str(type(widg)) + " : Yes")
-                        entry_check_list[widg] = True
-                        #Error_Label[widg].destroy()
-                    
-                    else:
-                        print(str(type(widg)) + " : No")
+                if widg in Error_Label.keys():
+                    Error_Label[widg].destroy()
+                    Error_Label.pop(widg)
+
+                if type(widg) not in (tk.Label, tk.Radiobutton, tk.OptionMenu, tk.Button):                    
+                    if not widg.get() or 'enter' in widg.get().lower():
                         Error_Label[widg] = tk.Label(self, text = "Compulory Field!", width = 20, font = ("bold", 10), fg = "red")
                         Error_Label[widg].place(in_ = widg, relx = 1.5)
                         widg.focus_set()
-                        entry_check_list[widg] = False
 
 
                 elif type(widg) == tk.Radiobutton:
                     if rad_btn_count < 3:
                         rad_btn_count += 1
+                    
                     else:
-                        if Gender_var.get() in (1, 2, 3):
-                            print(str(type(widg)) + " : Yes")
-                            entry_check_list[widg] = True
-                        else:
-                            print(str(type(widg)) + " : No")
+                        if Gender_var.get() not in (1, 2, 3):
                             Error_Label[widg] = tk.Label(self, text = "Compulory Field!", width = 20, font = ("bold", 10), fg = "red")
                             Error_Label[widg].place(in_ = widg, relx = 1.5)
                             widg.focus_set()
-                            entry_check_list[widg] = False
                     
-                '''elif type(widg) == tk.OptionMenu:
-                    if 'select' not in widg.con'''
+                    
+                elif type(widg) == tk.OptionMenu:
+                    if widg.extra == 'country_drplst':
+                        if not Country_var.get() or 'select' in Country_var.get().lower() and widg not in Error_Label.keys():
+                            Error_Label[widg] = tk.Label(self, text = "Compulory Field!", width = 20, font = ("bold", 10), fg = "red")
+                            Error_Label[widg].place(in_ = widg, relx = 1.34)
+                            widg.focus_set()
+
+                    else:                        
+                        if not BloodGroup_var.get() or 'select' in BloodGroup_var.get().lower() and widg not in Error_Label.keys():
+                            Error_Label[widg] = tk.Label(self, text = "Compulory Field!", width = 20, font = ("bold", 10), fg = "red")
+                            Error_Label[widg].place(in_ = widg, relx = 1.34)
+                            widg.focus_set()
 
 
-            if False not in entry_check_list.values():
+
+            if not bool(Error_Label):
                 store_details()
                 self.destroy()
                 self.NextPage()
@@ -139,12 +137,12 @@ class Registration_Page(tk.Frame):
 
 
         page_title = tk.Label(self, text = "Registration form", width = 20, font = ("bold", 20))
-        page_title.place(relx = 0.5, y = 60, anchor = tk.CENTER)
+        page_title.place(relx = 0.5, y = 70, anchor = tk.CENTER)
 
 
         FirstName_entry = tk.Entry(self, textvar = FirstName_var)
         FirstName_entry.insert(tk.END, 'Enter First Name')
-        FirstName_entry.place(relx = 0.5, y = 100, anchor = tk.CENTER)
+        FirstName_entry.place(relx = 0.5, y = 140, anchor = tk.CENTER)
         FirstName_entry.bind('<1>', EntryClick)
 
         FirstName_lbl = tk.Label(self, text = "First Name", width = 20, font = ("bold", 10))
@@ -153,7 +151,7 @@ class Registration_Page(tk.Frame):
 
         MiddleName_entry = tk.Entry(self, textvar = MiddleName_var)
         MiddleName_entry.insert(tk.END, 'Enter Middle Name')
-        MiddleName_entry.place(relx = 0.5, y = 140, anchor = tk.CENTER)
+        MiddleName_entry.place(relx = 0.5, y = 180, anchor = tk.CENTER)
         MiddleName_entry.bind('<1>', EntryClick)
 
         MiddleName_lbl = tk.Label(self, text = "Middle Name", width = 20, font = ("bold", 10))
@@ -162,7 +160,7 @@ class Registration_Page(tk.Frame):
 
         LastName_entry = tk.Entry(self, textvar = LastName_var)
         LastName_entry.insert(tk.END, 'Enter Last Name')
-        LastName_entry.place(relx = 0.5, y = 180, anchor = tk.CENTER)
+        LastName_entry.place(relx = 0.5, y = 220, anchor = tk.CENTER)
         LastName_entry.bind('<1>', EntryClick)
 
         LastName_lbl = tk.Label(self, text = "Last Name", width = 20, font = ("bold", 10))
@@ -174,7 +172,7 @@ class Registration_Page(tk.Frame):
 
         PhoneNo_entry = tk.Entry(self, textvar = PhoneNo_var)
         PhoneNo_entry.insert(tk.END, 'Enter Phone Number')
-        PhoneNo_entry.place(relx = 0.5, y = 220, anchor = tk.CENTER)
+        PhoneNo_entry.place(relx = 0.5, y = 260, anchor = tk.CENTER)
         PhoneNo_entry.bind('<1>', EntryClick)
         PhoneNo_entry.configure(validate = 'all', validatecommand = (vcmd, '%P', 10))
 
@@ -184,7 +182,7 @@ class Registration_Page(tk.Frame):
 
         email_entry = tk.Entry(self, textvar = Email_var)
         email_entry.insert(tk.END, 'Enter email address')
-        email_entry.place(relx = 0.5, y = 260, anchor = tk.CENTER)
+        email_entry.place(relx = 0.5, y = 300, anchor = tk.CENTER)
         email_entry.bind('<1>', EntryClick)
 
         email_lbl = tk.Label(self, text = "Email", width = 20, font = ("bold", 10))
@@ -195,7 +193,7 @@ class Registration_Page(tk.Frame):
         Mal_RadBut = tk.Radiobutton(self, text = "Male", padx = 4, variable = Gender_var, value = 2)
         Other_RadBut = tk.Radiobutton(self, text = "Others", padx = 4, variable = Gender_var, value = 3)
 
-        Mal_RadBut.place(relx = 0.5, y = 300, anchor = tk.CENTER)
+        Mal_RadBut.place(relx = 0.5, y = 340, anchor = tk.CENTER)
         Fem_RadBut.place(in_ = Mal_RadBut, relx = -1.5, rely = -0.25)
         Other_RadBut.place(in_ = Mal_RadBut, relx = 1, rely = -0.25)
 
@@ -209,7 +207,8 @@ class Registration_Page(tk.Frame):
         country_drplst = tk.OptionMenu(self, Country_var, *country_list)
         country_drplst.config(width = 18)
         Country_var.set('Select Country')
-        country_drplst.place(relx = 0.5, y = 340, anchor = tk.CENTER)
+        country_drplst.place(relx = 0.5, y = 380, anchor = tk.CENTER)
+        country_drplst.extra = 'country_drplst'
 
         country_lbl = tk.Label(self, text="Country", width=20, font=("bold", 10))
         country_lbl.place(in_ = country_drplst, relx = -1.18, rely = 0)
@@ -217,7 +216,7 @@ class Registration_Page(tk.Frame):
 
         age_entry = tk.Entry(self, textvar = Age_var)
         age_entry.insert(tk.END, 'Enter Age')
-        age_entry.place(relx = 0.5, y = 380, anchor = tk.CENTER)
+        age_entry.place(relx = 0.5, y = 420, anchor = tk.CENTER)
         age_entry.bind('<1>', EntryClick)
         age_entry.configure(validate = 'all', validatecommand = (vcmd, '%P', 3))
 
@@ -230,7 +229,8 @@ class Registration_Page(tk.Frame):
         BldGrp_drplist = tk.OptionMenu(self, BloodGroup_var, *BldGrp_list)
         BldGrp_drplist.config(width = 18)
         BloodGroup_var.set('Select Blood Group')
-        BldGrp_drplist.place(relx = 0.5, y = 420, anchor = tk.CENTER)
+        BldGrp_drplist.place(relx = 0.5, y = 470, anchor = tk.CENTER)
+        BldGrp_drplist.extra = 'bldgrp_drplist'
 
         BldGrp_lbl = tk.Label(self, text = "Blood Group", width = 15, font = ('bold', 10))
         BldGrp_lbl.place(in_ = BldGrp_drplist, relx = -1.04, rely = 0)
@@ -238,7 +238,7 @@ class Registration_Page(tk.Frame):
 
         wght_entry = tk.Entry(self, textvar = Weight_var)
         wght_entry.insert(tk.END, 'Enter Weight')
-        wght_entry.place(relx = 0.5, y = 470, anchor = tk.CENTER)
+        wght_entry.place(relx = 0.5, y = 510, anchor = tk.CENTER)
         wght_entry.bind('<1>', EntryClick)
         wght_entry.configure(validate = 'all', validatecommand = (vcmd, '%P', 3))
 
@@ -248,7 +248,7 @@ class Registration_Page(tk.Frame):
 
         hght_entry = tk.Entry(self, textvar = Height_var)
         hght_entry.insert(tk.END, 'Enter Height')
-        hght_entry.place(relx = 0.5, y = 510, anchor = tk.CENTER)
+        hght_entry.place(relx = 0.5, y = 550, anchor = tk.CENTER)
         hght_entry.bind('<1>', EntryClick)
         hght_entry.configure(validate = 'all', validatecommand = (vcmd, '%P', 3))
 
@@ -258,8 +258,8 @@ class Registration_Page(tk.Frame):
 
         
         Submit_btn = tk.Button(self, text = 'Submit', width = 20, bg = "Red", fg = 'white',
-                               command=lambda: Entrycheck())
-        Submit_btn.place(relx = 0.5, y = 570, anchor = tk.CENTER)
+                               command = lambda: EntryCheck())
+        Submit_btn.place(relx = 0.5, y = 610, anchor = tk.CENTER)
         #Submit_btn.bind('<1>', Entrycheck)
 
 
