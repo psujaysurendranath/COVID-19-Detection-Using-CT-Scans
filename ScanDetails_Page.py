@@ -11,11 +11,12 @@ class ScanDetails_Page(tk.Frame):
         
         last_patient_id, last_patient_name = self.database()
         
+
         def add_file():
-            global filepath
+            #global filepath
+            self.filepath = tk.StringVar()
             
-            filepath = tk.StringVar()
-            filepath = tk.filedialog.askopenfilename(defaultextension = ".png", filetypes = [("All files", "*.*"), ("images", "*.png")])
+            self.filepath = tk.filedialog.askopenfilename(defaultextension = ".png", filetypes = [("All files", "*.*"), ("images", "*.png")])
             #print(filepath)
             
             #new_window = tkinter.Toplevel(root)
@@ -26,14 +27,19 @@ class ScanDetails_Page(tk.Frame):
             #l1.image = image
             #l1.pack()
             
-            im = Image.open(filepath)
-            im = im.resize((596, 447))
-            im.save('Patient Data/' + last_patient_id + '/' + last_patient_id+'_scan.png')
-            tkimage = ImageTk.PhotoImage(im)
+
+            self.im = Image.open(self.filepath)
+            self.im = self.im.resize((596, 447))
+            #im.save('Patient Data/' + last_patient_id + '/' + last_patient_id+'_scan.png')
+            tkimage = ImageTk.PhotoImage(self.im)
             
             mylabel = tk.Label(self, image = tkimage)
             mylabel.image = tkimage
             mylabel.place(relx = 0.5, rely = 0.43, anchor = tk.CENTER)
+
+
+        def predict_n_save_file():
+            self.im.save('Patient Data/' + last_patient_id + '/' + last_patient_id+'_scan.png')
         
 
         head = tk.Label(self, text = "COVID-19 PREDICTION USING X-RAYS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN)
@@ -59,8 +65,8 @@ class ScanDetails_Page(tk.Frame):
         Choose_btn.place(relx = 0.5 , y = 550, anchor = tk.CENTER)
 
         
-        Predict_btn = tk.Button(self, text = "Predict", width = 20, bg = "Red",fg = 'white')
-                          #command=lambda: add_file)
+        Predict_btn = tk.Button(self, text = "Predict", width = 20, bg = "Red",fg = 'white',
+                          command=lambda: predict_n_save_file())
         Predict_btn.place(relx = 0.5 , y = 590, anchor = tk.CENTER)
 
         
