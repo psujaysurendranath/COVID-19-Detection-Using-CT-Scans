@@ -1,4 +1,4 @@
-from sqlite3.dbapi2 import Error
+#from sqlite3.dbapi2 import Error
 import tkinter as tk
 import sqlite3
 import json
@@ -11,70 +11,30 @@ class Registration_Page(tk.Frame):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
         
                 
-        FirstName_var = tk.StringVar()
-        MiddleName_var = tk.StringVar()
-        LastName_var = tk.StringVar()
-        PhoneNo_var = tk.StringVar()
-        Email_var = tk.StringVar()
-        Gender_var = tk.IntVar()
-        Country_var = tk.StringVar()
-        Age_var = tk.StringVar()
-        BloodGroup_var = tk.StringVar()
-        Weight_var = tk.StringVar()
-        Height_var = tk.StringVar()
+        self.FirstName_var = tk.StringVar()
+        self.MiddleName_var = tk.StringVar()
+        self.LastName_var = tk.StringVar()
+        self.PhoneNo_var = tk.StringVar()
+        self.Email_var = tk.StringVar()
+        self.Gender_var = tk.IntVar()
+        self.Country_var = tk.StringVar()
+        self.Age_var = tk.StringVar()
+        self.BloodGroup_var = tk.StringVar()
+        self.Weight_var = tk.StringVar()
+        self.Height_var = tk.StringVar()
 
 
-        Error_Label = {}
+        self.Error_Label = {}
         
-        def EntryCheck():
-            rad_btn_count = 1
-            
-            for widg in self.winfo_children():
-                if widg in Error_Label.keys():
-                    Error_Label[widg].destroy()
-                    Error_Label.pop(widg)
-
-                if type(widg) not in (tk.Label, tk.Radiobutton, tk.OptionMenu, tk.Button):                    
-                    if not widg.get() or 'enter' in widg.get().lower():
-                        Error_Label[widg] = tk.Label(self, text = "Compulory Field!", width = 20, font = ("bold", 10), fg = "red")
-                        Error_Label[widg].place(in_ = widg, relx = 1.5)
-                        widg.focus_set()
-
-
-                elif type(widg) == tk.Radiobutton:
-                    if rad_btn_count < 3:
-                        rad_btn_count += 1
-                    
-                    else:
-                        if Gender_var.get() not in (1, 2, 3):
-                            Error_Label[widg] = tk.Label(self, text = "Compulory Field!", width = 20, font = ("bold", 10), fg = "red")
-                            Error_Label[widg].place(in_ = widg, relx = 1.5)
-                            widg.focus_set()
-                    
-                    
-                elif type(widg) == tk.OptionMenu:
-                    if widg.extra == 'country_drplst':
-                        if not Country_var.get() or 'select' in Country_var.get().lower() and widg not in Error_Label.keys():
-                            Error_Label[widg] = tk.Label(self, text = "Compulory Field!", width = 20, font = ("bold", 10), fg = "red")
-                            Error_Label[widg].place(in_ = widg, relx = 1.34)
-                            widg.focus_set()
-
-                    else:                        
-                        if not BloodGroup_var.get() or 'select' in BloodGroup_var.get().lower() and widg not in Error_Label.keys():
-                            Error_Label[widg] = tk.Label(self, text = "Compulory Field!", width = 20, font = ("bold", 10), fg = "red")
-                            Error_Label[widg].place(in_ = widg, relx = 1.34)
-                            widg.focus_set()
-
-
-
-            if not bool(Error_Label):
-                store_details()
-                self.destroy()
-                self.NextPage()
         
 
         def EntryClick(event):
-            event.widget.delete(0, tk.END)
+            if 'enter' in event.widget.get().lower():
+                event.widget.delete(0, tk.END)
+            
+            '''elif event.widget.get():
+                event.widget.select_range(0, tk.END)
+                event.widget.icursor(tk.END)'''
 
 
         def numeric_callback(P, n):
@@ -84,52 +44,6 @@ class Registration_Page(tk.Frame):
             else:
                 return False
 
-        
-        def store_details():
-            details = {
-                'create_time' : None,
-                'modify_time' : None,
-                'patient_id' : None,
-                'name' : FirstName_var.get()+ " " + MiddleName_var.get()+ " " + LastName_var.get(),
-                'phone_no' : int(PhoneNo_var.get()),
-                'email' : Email_var.get(),
-                'country' : Country_var.get(),
-                'gender' : 'Male' if Gender_var.get() == 2 else 'Female' if Gender_var.get() == 1 else 'Others',
-                'age' : int(Age_var.get()),
-                'weight' : int(Weight_var.get()),
-                'bloodgroup' : BloodGroup_var.get(),
-                'height' : int(Height_var.get()),
-                'covid_status' : 'NA'
-            }
-
-
-            details['create_time'], details['modify_time'], details['patient_id'] = self.database(details)
-
-
-            data_folder = 'Patient Data/'
-
-
-            #if details['name'] not in os.listdir(data_folder):
-            os.mkdir(data_folder+details['patient_id'])
-
-
-            #print(details)
-
-
-            with open(data_folder+details['patient_id']+'/'+details['patient_id']+'_data.json', 'w') as patient_file:
-                json.dump(details, patient_file)
-
-            patient_file.close()
-
-            #nextWin = ScanDetails_Page()
-
-
-            '''with open(data_folder+details['patient_id']+'/'+details['patient_id']+'_data.json', 'r') as patient_file_read:
-                data = json.load(patient_file_read)
-            
-            print(data)
-
-            patient_file_read.close()'''
 
 
         head = tk.Label(self, text = "COVID-19 PREDICTION USING CT-SCANS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN)
@@ -140,7 +54,7 @@ class Registration_Page(tk.Frame):
         page_title.place(relx = 0.5, y = 70, anchor = tk.CENTER)
 
 
-        FirstName_entry = tk.Entry(self, textvar = FirstName_var)
+        FirstName_entry = tk.Entry(self, textvar = self.FirstName_var)
         FirstName_entry.insert(tk.END, 'Enter First Name')
         FirstName_entry.place(relx = 0.5, y = 140, anchor = tk.CENTER)
         FirstName_entry.bind('<1>', EntryClick)
@@ -149,7 +63,7 @@ class Registration_Page(tk.Frame):
         FirstName_lbl.place(in_ = FirstName_entry, relx = -1.5, rely = 0)
 
 
-        MiddleName_entry = tk.Entry(self, textvar = MiddleName_var)
+        MiddleName_entry = tk.Entry(self, textvar = self.MiddleName_var)
         MiddleName_entry.insert(tk.END, 'Enter Middle Name')
         MiddleName_entry.place(relx = 0.5, y = 180, anchor = tk.CENTER)
         MiddleName_entry.bind('<1>', EntryClick)
@@ -158,7 +72,7 @@ class Registration_Page(tk.Frame):
         MiddleName_lbl.place(in_ = MiddleName_entry, relx = -1.5, rely = 0)
 
 
-        LastName_entry = tk.Entry(self, textvar = LastName_var)
+        LastName_entry = tk.Entry(self, textvar = self.LastName_var)
         LastName_entry.insert(tk.END, 'Enter Last Name')
         LastName_entry.place(relx = 0.5, y = 220, anchor = tk.CENTER)
         LastName_entry.bind('<1>', EntryClick)
@@ -170,7 +84,7 @@ class Registration_Page(tk.Frame):
         vcmd = (self.register(numeric_callback))    
 
 
-        PhoneNo_entry = tk.Entry(self, textvar = PhoneNo_var)
+        PhoneNo_entry = tk.Entry(self, textvar = self.PhoneNo_var)
         PhoneNo_entry.insert(tk.END, 'Enter Phone Number')
         PhoneNo_entry.place(relx = 0.5, y = 260, anchor = tk.CENTER)
         PhoneNo_entry.bind('<1>', EntryClick)
@@ -180,7 +94,7 @@ class Registration_Page(tk.Frame):
         PhoneNo_lbl.place(in_ = PhoneNo_entry, relx = -1.5, rely = 0)
 
 
-        email_entry = tk.Entry(self, textvar = Email_var)
+        email_entry = tk.Entry(self, textvar = self.Email_var)
         email_entry.insert(tk.END, 'Enter email address')
         email_entry.place(relx = 0.5, y = 300, anchor = tk.CENTER)
         email_entry.bind('<1>', EntryClick)
@@ -189,9 +103,9 @@ class Registration_Page(tk.Frame):
         email_lbl.place(in_ = email_entry, relx = -1.5, rely = 0)
 
 
-        Fem_RadBut = tk.Radiobutton(self, text = "Female", padx = 10, variable = Gender_var, value = 1)
-        Mal_RadBut = tk.Radiobutton(self, text = "Male", padx = 4, variable = Gender_var, value = 2)
-        Other_RadBut = tk.Radiobutton(self, text = "Others", padx = 4, variable = Gender_var, value = 3)
+        Fem_RadBut = tk.Radiobutton(self, text = "Female", padx = 10, variable = self.Gender_var, value = 1)
+        Mal_RadBut = tk.Radiobutton(self, text = "Male", padx = 4, variable = self.Gender_var, value = 2)
+        Other_RadBut = tk.Radiobutton(self, text = "Others", padx = 4, variable = self.Gender_var, value = 3)
 
         Mal_RadBut.place(relx = 0.5, y = 340, anchor = tk.CENTER)
         Fem_RadBut.place(in_ = Mal_RadBut, relx = -1.5, rely = -0.25)
@@ -204,9 +118,9 @@ class Registration_Page(tk.Frame):
         country_list = ['Austria (AT)', 'Germany (DE)', 'India (IN)', 'South Korea (KR)', 'United Kingdom (GB)', 'United States (US)' ]
         
 
-        country_drplst = tk.OptionMenu(self, Country_var, *country_list)
+        country_drplst = tk.OptionMenu(self, self.Country_var, *country_list)
         country_drplst.config(width = 18)
-        Country_var.set('Select Country')
+        self.Country_var.set('Select Country')
         country_drplst.place(relx = 0.5, y = 380, anchor = tk.CENTER)
         country_drplst.extra = 'country_drplst'
 
@@ -214,7 +128,7 @@ class Registration_Page(tk.Frame):
         country_lbl.place(in_ = country_drplst, relx = -1.18, rely = 0)
 
 
-        age_entry = tk.Entry(self, textvar = Age_var)
+        age_entry = tk.Entry(self, textvar = self.Age_var)
         age_entry.insert(tk.END, 'Enter Age')
         age_entry.place(relx = 0.5, y = 420, anchor = tk.CENTER)
         age_entry.bind('<1>', EntryClick)
@@ -226,9 +140,9 @@ class Registration_Page(tk.Frame):
 
         BldGrp_list = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
 
-        BldGrp_drplist = tk.OptionMenu(self, BloodGroup_var, *BldGrp_list)
+        BldGrp_drplist = tk.OptionMenu(self, self.BloodGroup_var, *BldGrp_list)
         BldGrp_drplist.config(width = 18)
-        BloodGroup_var.set('Select Blood Group')
+        self.BloodGroup_var.set('Select Blood Group')
         BldGrp_drplist.place(relx = 0.5, y = 470, anchor = tk.CENTER)
         BldGrp_drplist.extra = 'bldgrp_drplist'
 
@@ -236,7 +150,7 @@ class Registration_Page(tk.Frame):
         BldGrp_lbl.place(in_ = BldGrp_drplist, relx = -1.04, rely = 0)
 
 
-        wght_entry = tk.Entry(self, textvar = Weight_var)
+        wght_entry = tk.Entry(self, textvar = self.Weight_var)
         wght_entry.insert(tk.END, 'Enter Weight')
         wght_entry.place(relx = 0.5, y = 510, anchor = tk.CENTER)
         wght_entry.bind('<1>', EntryClick)
@@ -246,7 +160,7 @@ class Registration_Page(tk.Frame):
         wght_lbl.place(in_ = wght_entry, relx = -1.5, rely = 0)
 
 
-        hght_entry = tk.Entry(self, textvar = Height_var)
+        hght_entry = tk.Entry(self, textvar = self.Height_var)
         hght_entry.insert(tk.END, 'Enter Height')
         hght_entry.place(relx = 0.5, y = 550, anchor = tk.CENTER)
         hght_entry.bind('<1>', EntryClick)
@@ -258,9 +172,106 @@ class Registration_Page(tk.Frame):
 
         
         Submit_btn = tk.Button(self, text = 'Submit', width = 20, bg = "Red", fg = 'white',
-                               command = lambda: EntryCheck())
+                               command = lambda: self.EntryCheck())
         Submit_btn.place(relx = 0.5, y = 610, anchor = tk.CENTER)
         #Submit_btn.bind('<1>', Entrycheck)
+
+    
+
+    def EntryCheck(self):
+        rad_btn_count = 1
+        
+        for widg in self.winfo_children():
+            if widg in self.Error_Label.keys():
+                self.Error_Label[widg].destroy()
+                self.Error_Label.pop(widg)
+
+            if type(widg) not in (tk.Label, tk.Radiobutton, tk.OptionMenu, tk.Button):                    
+                if not widg.get() or 'enter' in widg.get().lower():
+                    self.Error_Label[widg] = tk.Label(self, text = "Compulory Field!", width = 20, font = ("bold", 10), fg = "red")
+                    self.Error_Label[widg].place(in_ = widg, relx = 1.5)
+                    widg.focus_set()
+
+
+            elif type(widg) == tk.Radiobutton:
+                if rad_btn_count < 3:
+                    rad_btn_count += 1
+                
+                else:
+                    if self.Gender_var.get() not in (1, 2, 3):
+                        self.Error_Label[widg] = tk.Label(self, text = "Compulory Field!", width = 20, font = ("bold", 10), fg = "red")
+                        self.Error_Label[widg].place(in_ = widg, relx = 1.5)
+                        widg.focus_set()
+                
+                
+            elif type(widg) == tk.OptionMenu:
+                if widg.extra == 'country_drplst':
+                    if not self.Country_var.get() or 'select' in self.Country_var.get().lower() and widg not in self.Error_Label.keys():
+                        self.Error_Label[widg] = tk.Label(self, text = "Compulory Field!", width = 20, font = ("bold", 10), fg = "red")
+                        self.Error_Label[widg].place(in_ = widg, relx = 1.34)
+                        widg.focus_set()
+
+                else:                        
+                    if not self.BloodGroup_var.get() or 'select' in self.BloodGroup_var.get().lower() and widg not in self.Error_Label.keys():
+                        self.Error_Label[widg] = tk.Label(self, text = "Compulory Field!", width = 20, font = ("bold", 10), fg = "red")
+                        self.Error_Label[widg].place(in_ = widg, relx = 1.34)
+                        widg.focus_set()
+
+
+
+        if not bool(self.Error_Label):
+            self.store_details()
+            self.destroy()
+            self.NextPage()
+
+
+
+    def store_details(self):
+        details = {
+            'create_time' : None,
+            'modify_time' : None,
+            'patient_id' : None,
+            'name' : self.FirstName_var.get()+ " " + self.MiddleName_var.get()+ " " + self.LastName_var.get(),
+            'phone_no' : int(self.PhoneNo_var.get()),
+            'email' : self.Email_var.get(),
+            'country' : self.Country_var.get(),
+            'gender' : 'Male' if self.Gender_var.get() == 2 else 'Female' if self.Gender_var.get() == 1 else 'Others',
+            'age' : int(self.Age_var.get()),
+            'weight' : int(self.Weight_var.get()),
+            'bloodgroup' : self.BloodGroup_var.get(),
+            'height' : int(self.Height_var.get()),
+            'covid_status' : 'NA'
+        }
+
+
+        details['create_time'], details['modify_time'], details['patient_id'] = self.database(details)
+
+
+        data_folder = 'Patient Data/'
+
+
+        #if details['name'] not in os.listdir(data_folder):
+        os.mkdir(data_folder+details['patient_id'])
+
+
+        #print(details)
+
+
+        with open(data_folder+details['patient_id']+'/'+details['patient_id']+'_data.json', 'w') as patient_file:
+            json.dump(details, patient_file)
+
+        patient_file.close()
+
+        #nextWin = ScanDetails_Page()
+
+
+        '''with open(data_folder+details['patient_id']+'/'+details['patient_id']+'_data.json', 'r') as patient_file_read:
+            data = json.load(patient_file_read)
+        
+        print(data)
+
+        patient_file_read.close()'''
+
 
 
     def database(self, details):
@@ -304,6 +315,7 @@ class Registration_Page(tk.Frame):
         return current_datetime, current_datetime, current_patient_id
 
 
+
     def NextPage(self):
         nextWin = ScanDetails_Page()
         
@@ -311,8 +323,10 @@ class Registration_Page(tk.Frame):
         nextWin.start()
 
 
+
     def start(self):
         self.mainloop()
+
 
 
 if __name__ == "__main__":
