@@ -1,9 +1,11 @@
 #from sqlite3.dbapi2 import Error
 import tkinter as tk
+from tkinter import messagebox
 import sqlite3
 import json
 import os
 import datetime
+import re
 from ScanDetails_Page import ScanDetails_Page
 
 class Registration_Page(tk.Frame):
@@ -25,25 +27,6 @@ class Registration_Page(tk.Frame):
 
 
         self.Error_Label = {}
-        
-        
-
-        def EntryClick(event):
-            if 'enter' in event.widget.get().lower():
-                event.widget.delete(0, tk.END)
-            
-            '''elif event.widget.get():
-                event.widget.select_range(0, tk.END)
-                event.widget.icursor(tk.END)'''
-
-
-        def numeric_callback(P, n):
-            if str.isdigit(P) and len(str(P)) <= int(n) or P == "":
-                return True
-            
-            else:
-                return False
-
 
 
         head = tk.Label(self, text = "COVID-19 PREDICTION USING CT-SCANS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN)
@@ -57,7 +40,7 @@ class Registration_Page(tk.Frame):
         FirstName_entry = tk.Entry(self, textvar = self.FirstName_var)
         FirstName_entry.insert(tk.END, 'Enter First Name')
         FirstName_entry.place(relx = 0.5, y = 140, anchor = tk.CENTER)
-        FirstName_entry.bind('<1>', EntryClick)
+        FirstName_entry.bind('<1>', self.EntryClick)
 
         FirstName_lbl = tk.Label(self, text = "First Name", width = 20, font = ("bold", 10))
         FirstName_lbl.place(in_ = FirstName_entry, relx = -1.5, rely = 0)
@@ -66,7 +49,7 @@ class Registration_Page(tk.Frame):
         MiddleName_entry = tk.Entry(self, textvar = self.MiddleName_var)
         MiddleName_entry.insert(tk.END, 'Enter Middle Name')
         MiddleName_entry.place(relx = 0.5, y = 180, anchor = tk.CENTER)
-        MiddleName_entry.bind('<1>', EntryClick)
+        MiddleName_entry.bind('<1>', self.EntryClick)
 
         MiddleName_lbl = tk.Label(self, text = "Middle Name", width = 20, font = ("bold", 10))
         MiddleName_lbl.place(in_ = MiddleName_entry, relx = -1.5, rely = 0)
@@ -75,29 +58,33 @@ class Registration_Page(tk.Frame):
         LastName_entry = tk.Entry(self, textvar = self.LastName_var)
         LastName_entry.insert(tk.END, 'Enter Last Name')
         LastName_entry.place(relx = 0.5, y = 220, anchor = tk.CENTER)
-        LastName_entry.bind('<1>', EntryClick)
+        LastName_entry.bind('<1>', self.EntryClick)
 
         LastName_lbl = tk.Label(self, text = "Last Name", width = 20, font = ("bold", 10))
         LastName_lbl.place(in_ = LastName_entry, relx = -1.5, rely = 0)
 
         
-        vcmd = (self.register(numeric_callback))    
+        numeric_vcmd = (self.register(self.numeric_callback))    
 
 
         PhoneNo_entry = tk.Entry(self, textvar = self.PhoneNo_var)
         PhoneNo_entry.insert(tk.END, 'Enter Phone Number')
         PhoneNo_entry.place(relx = 0.5, y = 260, anchor = tk.CENTER)
-        PhoneNo_entry.bind('<1>', EntryClick)
-        PhoneNo_entry.configure(validate = 'all', validatecommand = (vcmd, '%P', 10))
+        PhoneNo_entry.bind('<1>', self.EntryClick)
+        PhoneNo_entry.configure(validate = 'all', validatecommand = (numeric_vcmd, '%P', 10))
 
         PhoneNo_lbl = tk.Label(self, text = "Phone Number", width = 20, font = ("bold", 10))
         PhoneNo_lbl.place(in_ = PhoneNo_entry, relx = -1.5, rely = 0)
 
 
+        #email_vcmd = (self.register(self.email_callback))
+
+
         email_entry = tk.Entry(self, textvar = self.Email_var)
         email_entry.insert(tk.END, 'Enter email address')
         email_entry.place(relx = 0.5, y = 300, anchor = tk.CENTER)
-        email_entry.bind('<1>', EntryClick)
+        email_entry.bind('<1>', self.EntryClick)
+        #email_entry.configure(validate = 'key', validatecommand = (email_vcmd, '%P'))
 
         email_lbl = tk.Label(self, text = "Email", width = 20, font = ("bold", 10))
         email_lbl.place(in_ = email_entry, relx = -1.5, rely = 0)
@@ -131,8 +118,8 @@ class Registration_Page(tk.Frame):
         age_entry = tk.Entry(self, textvar = self.Age_var)
         age_entry.insert(tk.END, 'Enter Age')
         age_entry.place(relx = 0.5, y = 420, anchor = tk.CENTER)
-        age_entry.bind('<1>', EntryClick)
-        age_entry.configure(validate = 'all', validatecommand = (vcmd, '%P', 3))
+        age_entry.bind('<1>', self.EntryClick)
+        age_entry.configure(validate = 'all', validatecommand = (numeric_vcmd, '%P', 3))
 
         age_label = tk.Label(self, text = "Age", width = 20, font = ('bold', 10))
         age_label.place(in_ = age_entry, relx = -1.5, rely = 0)
@@ -153,8 +140,8 @@ class Registration_Page(tk.Frame):
         wght_entry = tk.Entry(self, textvar = self.Weight_var)
         wght_entry.insert(tk.END, 'Enter Weight')
         wght_entry.place(relx = 0.5, y = 510, anchor = tk.CENTER)
-        wght_entry.bind('<1>', EntryClick)
-        wght_entry.configure(validate = 'all', validatecommand = (vcmd, '%P', 3))
+        wght_entry.bind('<1>', self.EntryClick)
+        wght_entry.configure(validate = 'all', validatecommand = (numeric_vcmd, '%P', 3))
 
         wght_lbl = tk.Label(self, text = "Weight (in kgs.)", width = 20, font = ('bold', 10))
         wght_lbl.place(in_ = wght_entry, relx = -1.5, rely = 0)
@@ -163,8 +150,8 @@ class Registration_Page(tk.Frame):
         hght_entry = tk.Entry(self, textvar = self.Height_var)
         hght_entry.insert(tk.END, 'Enter Height')
         hght_entry.place(relx = 0.5, y = 550, anchor = tk.CENTER)
-        hght_entry.bind('<1>', EntryClick)
-        hght_entry.configure(validate = 'all', validatecommand = (vcmd, '%P', 3))
+        hght_entry.bind('<1>', self.EntryClick)
+        hght_entry.configure(validate = 'all', validatecommand = (numeric_vcmd, '%P', 3))
 
         hght_label = tk.Label(self, text = "Height (in cms.)", width = 20, font = ('bold', 10))
         hght_label.place(in_ = hght_entry, relx = -1.5, rely = 0)
@@ -176,7 +163,40 @@ class Registration_Page(tk.Frame):
         Submit_btn.place(relx = 0.5, y = 610, anchor = tk.CENTER)
         #Submit_btn.bind('<1>', Entrycheck)
 
+
     
+    def EntryClick(self, event):
+        if 'enter' in event.widget.get().lower():
+            event.widget.delete(0, tk.END)
+        
+        '''elif event.widget.get():
+            event.widget.select_range(0, tk.END)
+            event.widget.icursor(tk.END)'''
+
+        
+
+    def numeric_callback(self, P, n):
+        if str.isdigit(P) and len(str(P)) <= int(n) or P == "":
+            return True
+        
+        else:
+            return False
+
+    
+
+    def email_check(self):
+        emailre = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
+        
+        email_id = self.Email_var.get()
+        
+        if emailre.match(email_id) != None:
+            return True
+
+        else:
+            messagebox.showerror("Error", "E-mail ID seems wrong")
+            return False
+
+
 
     def EntryCheck(self):
         rad_btn_count = 1
@@ -218,11 +238,12 @@ class Registration_Page(tk.Frame):
                         widg.focus_set()
 
 
-
         if not bool(self.Error_Label):
-            self.store_details()
-            self.destroy()
-            self.NextPage()
+            email_status = self.email_check()
+            if email_status:
+                self.store_details()
+                self.destroy()
+                self.NextPage()
 
 
 
