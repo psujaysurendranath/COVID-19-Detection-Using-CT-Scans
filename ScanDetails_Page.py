@@ -44,7 +44,7 @@ class ScanDetails_Page(tk.Frame):
 
         
         Quit_btn = tk.Button(self, text = "Quit", width = 20,
-                          command = lambda: [self.destroy(),
+                          command = lambda: [#self.destroy(),
                                              self.quit()])
         Quit_btn.place(relx = 0.5 , y = 630, anchor = tk.CENTER)
 

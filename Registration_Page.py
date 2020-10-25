@@ -186,18 +186,26 @@ class Registration_Page(tk.Frame):
 
     
 
-    def email_check(self):
+    def name_email_check(self):
         email_re = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
         name_re = re.compile(r"^[^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$")
         
-        email_id = self.Email_var.get()
-        
-        if email_re.match(email_id) != None:
-            return True
 
-        else:
+        email_id = self.Email_var.get()
+        name = self.FirstName_var.get()+ " " + self.MiddleName_var.get()+ " " + self.LastName_var.get()
+
+        
+        if email_re.match(email_id) == None:
             messagebox.showerror("Error", "E-mail ID seems wrong")
             return False
+
+        
+        if name_re.match(name) == None:
+            messagebox.showerror("Error", "Name seems wrong")
+            return False
+        
+
+        return True
 
 
 
@@ -241,10 +249,10 @@ class Registration_Page(tk.Frame):
                         widg.focus_set()
 
         if bool(self.Error_Label):
-            messagebox.showerror("Error", "Please Fill in all Details!")
+            messagebox.showerror("Error", "Please fill in all the details!")
 
         else:
-            if self.email_check():
+            if self.name_email_check():
                 self.store_details()
                 self.destroy()
                 self.NextPage()
