@@ -1,3 +1,5 @@
+# Author : Nidhi Gosavi
+
 #from sqlite3.dbapi2 import Error
 import tkinter as tk
 from tkinter import messagebox
@@ -185,11 +187,12 @@ class Registration_Page(tk.Frame):
     
 
     def email_check(self):
-        emailre = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
+        email_re = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
+        name_re = re.compile(r"^[^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$")
         
         email_id = self.Email_var.get()
         
-        if emailre.match(email_id) != None:
+        if email_re.match(email_id) != None:
             return True
 
         else:
@@ -237,10 +240,11 @@ class Registration_Page(tk.Frame):
                         self.Error_Label[widg].place(in_ = widg, relx = 1.34)
                         widg.focus_set()
 
+        if bool(self.Error_Label):
+            messagebox.showerror("Error", "Please Fill in all Details!")
 
-        if not bool(self.Error_Label):
-            email_status = self.email_check()
-            if email_status:
+        else:
+            if self.email_check():
                 self.store_details()
                 self.destroy()
                 self.NextPage()
