@@ -1,4 +1,4 @@
-# Author : Janvi Patil
+# Author : Janvi D. Patil
 
 import tkinter as tk
 import tkinter.filedialog

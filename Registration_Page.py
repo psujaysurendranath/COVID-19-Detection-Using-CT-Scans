@@ -1,4 +1,4 @@
-# Author : Nidhi Gosavi
+# Author : Nidhi S. Gosavi
 
 #from sqlite3.dbapi2 import Error
 import tkinter as tk
