@@ -39,10 +39,13 @@ class Registration_Page(tk.Frame):
         page_title.place(relx = 0.5, y = 70, anchor = tk.CENTER)
 
 
+        name_vcmd = (self.register(self.name_callback))
+
         FirstName_entry = tk.Entry(self, textvar = self.FirstName_var)
         FirstName_entry.insert(tk.END, 'Enter First Name')
         FirstName_entry.place(relx = 0.5, y = 140, anchor = tk.CENTER)
         FirstName_entry.bind('<1>', self.EntryClick)
+        FirstName_entry.configure(validate = 'all', validatecommand = (name_vcmd, '%P'))
 
         FirstName_lbl = tk.Label(self, text = "First Name", width = 20, font = ("bold", 10))
         FirstName_lbl.place(in_ = FirstName_entry, relx = -1.5, rely = 0)
@@ -52,6 +55,7 @@ class Registration_Page(tk.Frame):
         MiddleName_entry.insert(tk.END, 'Enter Middle Name')
         MiddleName_entry.place(relx = 0.5, y = 180, anchor = tk.CENTER)
         MiddleName_entry.bind('<1>', self.EntryClick)
+        MiddleName_entry.configure(validate = 'all', validatecommand = (name_vcmd, '%P'))
 
         MiddleName_lbl = tk.Label(self, text = "Middle Name", width = 20, font = ("bold", 10))
         MiddleName_lbl.place(in_ = MiddleName_entry, relx = -1.5, rely = 0)
@@ -61,6 +65,7 @@ class Registration_Page(tk.Frame):
         LastName_entry.insert(tk.END, 'Enter Last Name')
         LastName_entry.place(relx = 0.5, y = 220, anchor = tk.CENTER)
         LastName_entry.bind('<1>', self.EntryClick)
+        LastName_entry.configure(validate = 'all', validatecommand = (name_vcmd, '%P'))
 
         LastName_lbl = tk.Label(self, text = "Last Name", width = 20, font = ("bold", 10))
         LastName_lbl.place(in_ = LastName_entry, relx = -1.5, rely = 0)
@@ -184,15 +189,20 @@ class Registration_Page(tk.Frame):
         else:
             return False
 
+
+    
+    def name_callback(self, P):
+        return not str.isdigit(P)
+
     
 
     def name_email_check(self):
         email_re = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
-        name_re = re.compile(r"^[^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$")
+        name_re = re.compile(r"^[^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{1,}$")
         
 
         email_id = self.Email_var.get()
-        name = self.FirstName_var.get()+ " " + self.MiddleName_var.get()+ " " + self.LastName_var.get()
+        #name = self.FirstName_var.get()+ " " + self.MiddleName_var.get()+ " " + self.LastName_var.get()
 
         
         if email_re.match(email_id) == None:
@@ -200,10 +210,18 @@ class Registration_Page(tk.Frame):
             return False
 
         
-        if name_re.match(name) == None:
-            messagebox.showerror("Error", "Name seems wrong")
+        if name_re.match(self.FirstName_var.get()) == None or len(self.FirstName_var.get()) <= 2:
+            messagebox.showerror("Error", "First Name seems wrong")
             return False
         
+        if name_re.match(self.MiddleName_var.get()) == None:
+            messagebox.showerror("Error", "Middle Name seems wrong")
+            return False
+
+        if name_re.match(self.LastName_var.get()) == None:
+            messagebox.showerror("Error", "Last Name seems wrong")
+            return False
+
 
         return True
 

@@ -81,19 +81,21 @@ class ScanDetails_Page(tk.Frame):
         #l1.pack()
         
 
-        self.im = Image.open(self.filepath)
-        self.im = self.im.resize((596, 447))
-        #im.save('Patient Data/' + self.last_patient_id + '/' + self.last_patient_id+'_scan.png')
-        tkimage = ImageTk.PhotoImage(self.im)
-        
-        mylabel = tk.Label(self, image = tkimage)
-        mylabel.image = tkimage
-        mylabel.place(relx = 0.5, rely = 0.43, anchor = tk.CENTER)
+        if self.filepath:
+            self.im = Image.open(self.filepath)
+            self.im = self.im.resize((596, 447))
+            #im.save('Patient Data/' + self.last_patient_id + '/' + self.last_patient_id+'_scan.png')
+            tkimage = ImageTk.PhotoImage(self.im)
+            
+            mylabel = tk.Label(self, image = tkimage)
+            mylabel.image = tkimage
+            mylabel.place(relx = 0.5, rely = 0.43, anchor = tk.CENTER)
 
 
 
     def predict_n_save_file(self):
-        self.im.save('Patient Data/' + self.last_patient_id + '/' + self.last_patient_id+'_scan.png')
+        if self.filepath:
+            self.im.save('Patient Data/' + self.last_patient_id + '/' + self.last_patient_id+'_scan.png')
 
 
 
