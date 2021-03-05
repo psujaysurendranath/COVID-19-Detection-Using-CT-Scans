@@ -1,6 +1,5 @@
 # Author : Nidhi S. Gosavi
-#janvi patil
-# sujay
+
 #from sqlite3.dbapi2 import Error
 import tkinter as tk
 from tkinter import messagebox
@@ -296,9 +295,13 @@ class Registration_Page(tk.Frame):
         }
 
 
+        if 'Patient Data' not in os.listdir():
+            os.mkdir('Patient Data')
+
+
         details['create_time'], details['modify_time'], details['patient_id'] = self.database(details)
 
-
+        
         data_folder = 'Patient Data/'
 
 
