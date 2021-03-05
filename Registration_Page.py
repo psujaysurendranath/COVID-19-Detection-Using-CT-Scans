@@ -14,7 +14,8 @@ class Registration_Page(tk.Frame):
     def __init__(self, parent = None):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
         
-                
+        self.middle_widg = ""
+
         self.FirstName_var = tk.StringVar()
         self.MiddleName_var = tk.StringVar()
         self.LastName_var = tk.StringVar()
@@ -214,7 +215,7 @@ class Registration_Page(tk.Frame):
             messagebox.showerror("Error", "First Name seems wrong")
             return False
         
-        if name_re.match(self.MiddleName_var.get()) == None:
+        if self.MiddleName_var.get() and name_re.match(self.MiddleName_var.get()) == None:
             messagebox.showerror("Error", "Middle Name seems wrong")
             return False
 
@@ -235,7 +236,14 @@ class Registration_Page(tk.Frame):
                 self.Error_Label[widg].destroy()
                 self.Error_Label.pop(widg)
 
-            if type(widg) not in (tk.Label, tk.Radiobutton, tk.OptionMenu, tk.Button):                    
+            if type(widg) not in (tk.Label, tk.Radiobutton, tk.OptionMenu, tk.Button):
+                if "middle name" in widg.get().lower():
+                    self.middle_widg = str(widg)
+                    continue
+
+                if str(widg) == self.middle_widg:
+                    continue
+
                 if not widg.get() or 'enter' in widg.get().lower():
                     self.Error_Label[widg] = tk.Label(self, text = "Compulory Field!", width = 20, font = ("bold", 10), fg = "red")
                     self.Error_Label[widg].place(in_ = widg, relx = 1.5)
@@ -278,11 +286,16 @@ class Registration_Page(tk.Frame):
 
 
     def store_details(self):
+        mid_name = ""
+        if self.MiddleName_var.get() and "enter" not in self.MiddleName_var.get().lower():
+            mid_name = self.MiddleName_var.get()
+
+        
         details = {
             'create_time' : None,
             'modify_time' : None,
             'patient_id' : None,
-            'name' : self.FirstName_var.get()+ " " + self.MiddleName_var.get()+ " " + self.LastName_var.get(),
+            'name' : self.FirstName_var.get()+ " " + mid_name + " " + self.LastName_var.get(),
             'phone_no' : int(self.PhoneNo_var.get()),
             'email' : self.Email_var.get(),
             'country' : self.Country_var.get(),
