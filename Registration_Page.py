@@ -32,7 +32,7 @@ class Registration_Page(tk.Frame):
         self.Error_Label = {}
 
 
-        head = tk.Label(self, text = "COVID-19 PREDICTION USING CT-SCANS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN)
+        head = tk.Label(self, text = "COVID-19 PREDICTION USING CT-SCANS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN, width = 1000)
         head.place(relx = 0.5, y = 20, anchor = tk.CENTER)
 
 
@@ -215,9 +215,11 @@ class Registration_Page(tk.Frame):
             messagebox.showerror("Error", "First Name seems wrong")
             return False
         
-        if self.MiddleName_var.get() and name_re.match(self.MiddleName_var.get()) == None:
-            messagebox.showerror("Error", "Middle Name seems wrong")
-            return False
+
+        if self.MiddleName_var.get() and "enter" not in self.MiddleName_var.get().lower():
+            if self.MiddleName_var.get() != '' and name_re.match(self.MiddleName_var.get()) == None:
+                messagebox.showerror("Error", "Middle Name seems wrong")
+                return False
 
         if name_re.match(self.LastName_var.get()) == None:
             messagebox.showerror("Error", "Last Name seems wrong")
@@ -378,6 +380,8 @@ class Registration_Page(tk.Frame):
 
 
         conn.commit()
+
+        conn.close()
 
 
         return current_datetime, current_datetime, current_patient_id

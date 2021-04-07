@@ -2,10 +2,18 @@
 
 import tkinter as tk
 import tkinter.filedialog
-#import os
+import os
 from PIL import Image, ImageTk
 #import PIL
+import datetime
 import sqlite3
+import json
+import cv2
+import numpy as np
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import load_model
+
+from DisplayDetails_Page import DisplayDetails_Page
 
 class ScanDetails_Page(tk.Frame):
     def __init__(self, parent = None):
@@ -13,9 +21,18 @@ class ScanDetails_Page(tk.Frame):
         
 
         self.last_patient_id, self.last_patient_name = self.database()
+        self.classes = {'Covid Positive': 0, 'Healthy': 1, 'Other Infection': 2}
+
+        if str(self.last_patient_id) + '_scan.png' not in os.listdir('Patient Data/' + str(self.last_patient_id)):
+            self.filepath = ''
+
+        else:
+            self.filepath = 'Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_scan.png'
+            
+            self.show_image()
 
 
-        head = tk.Label(self, text = "COVID-19 PREDICTION USING CT-SCANS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN)
+        head = tk.Label(self, text = "COVID-19 PREDICTION USING CT-SCANS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN, width = 1000)
         head.place(relx = 0.5, y = 20, anchor = tk.CENTER)
 
 
@@ -51,14 +68,14 @@ class ScanDetails_Page(tk.Frame):
 
 
     def database(self):
-        conn = sqlite3.connect('Patient Data/Patients_covid_data.db')
+        self.conn = sqlite3.connect('Patient Data/Patients_covid_data.db')
         
-        with conn:
-            cursor = conn.cursor()
+        with self.conn:
+            self.cursor = self.conn.cursor()
         
-        cursor.execute("SELECT Patient_ID, Full_Name FROM Patients_Data_Ovrview ORDER BY Patient_ID DESC LIMIT 1")
+        self.cursor.execute("SELECT Patient_ID, Full_Name FROM Patients_Data_Ovrview ORDER BY Patient_ID DESC LIMIT 1")
         #print(cursor.fetchall()[0])
-        self.last_patient_id, self.last_patient_name = cursor.fetchall()[0]
+        self.last_patient_id, self.last_patient_name = self.cursor.fetchall()[0]
         #print(self.last_patient_id)
 
         return self.last_patient_id, self.last_patient_name
@@ -79,8 +96,11 @@ class ScanDetails_Page(tk.Frame):
         #l1 = tkinter.Label(new_window, image = image)
         #l1.image = image
         #l1.pack()
-        
+        self.show_image()
 
+
+    
+    def show_image(self):
         if self.filepath:
             self.im = Image.open(self.filepath)
             self.im = self.im.resize((596, 447))
@@ -95,7 +115,74 @@ class ScanDetails_Page(tk.Frame):
 
     def predict_n_save_file(self):
         if self.filepath:
-            self.im.save('Patient Data/' + self.last_patient_id + '/' + self.last_patient_id+'_scan.png')
+            save_file = 'Patient Data/' + self.last_patient_id + '/' + self.last_patient_id+'_scan.png'
+            self.im.save(save_file)
+            
+            patient_im = self.im_preprocess()
+
+            model = load_model('Model/model_resnet.h5')
+            
+            self.prediction = np.argmax(model.predict(patient_im), axis = -1)
+            #print(self.prediction)
+
+            self.prediction_class = list(self.classes.keys())[self.prediction[0]]
+            #print(self.prediction_class)
+
+            self.update_data()
+            self.NextPage()
+
+
+
+    def im_preprocess(self):
+        patient_im = Image.open(self.filepath)
+        patient_im = patient_im.resize((192, 150))
+        patient_im = np.array(patient_im)
+        patient_im = cv2.cvtColor(patient_im, cv2.COLOR_BGR2GRAY)
+        patient_im = patient_im / 255
+        patient_im = np.expand_dims(patient_im, axis = 0)
+        patient_im = np.expand_dims(patient_im, axis = 3)
+
+        return patient_im
+
+
+
+    def update_data(self):
+        current_datetime_obj = datetime.datetime.now()
+        #current_datetime_id = current_datetime_obj.strftime("%d%m%y%H%M%S")
+        current_datetime = current_datetime_obj.strftime("%d/%b/%Y %H:%M:%S:%f")
+        
+        self.cursor.execute('UPDATE Patients_Data_Ovrview SET COVID_status = ? WHERE patient_id = ?', (str(self.prediction_class), self.last_patient_id))
+        self.cursor.execute('UPDATE Patients_Data_Ovrview SET Modify_Time = ? WHERE patient_id = ?', (current_datetime, self.last_patient_id))
+        self.conn.commit()
+        self.conn.close()
+
+        with open('Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_data.json', 'r') as patient_file:
+            details = json.load(patient_file)
+
+        #print(details)
+
+        details['covid_status'] = self.prediction_class
+        details['modify_time'] = current_datetime
+
+        patient_file.close()
+
+        with open('Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_data.json', 'w') as patient_file:
+            json.dump(details, patient_file)
+
+        patient_file.close()
+
+        with open('Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_data.json', 'r') as patient_file:
+            details = json.load(patient_file)
+
+        #print(details)
+
+
+
+    def NextPage(self):
+        nextWin = DisplayDetails_Page()
+            
+        nextWin.pack()
+        nextWin.start()
 
 
 
