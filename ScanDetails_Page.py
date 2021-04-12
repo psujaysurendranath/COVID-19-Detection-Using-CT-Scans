@@ -1,5 +1,11 @@
 # Author : Janvi D. Patil
 
+from tkinter import messagebox
+from google.protobuf import message
+import requests
+from pydrive.files import GoogleDriveFile
+from pydrive.drive import GoogleDrive
+import zipfile
 import tkinter as tk
 import tkinter.filedialog
 import os
@@ -10,24 +16,39 @@ import sqlite3
 import json
 import cv2
 import numpy as np
+from tensorflow.keras import models
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.models import load_model
 
 from DisplayDetails_Page import DisplayDetails_Page
 
 class ScanDetails_Page(tk.Frame):
-    def __init__(self, parent = None):
+    def __init__(self, parent = None, patient_id = ''):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
         
+        if not bool(patient_id):
+            self.last_patient_id, self.last_patient_name = self.get_latest_patient()
 
-        self.last_patient_id, self.last_patient_name = self.database()
+        else:
+            self.last_patient_id = patient_id
+
+        with open('Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_data.json', 'r') as patient_file:
+            self.details = json.load(patient_file)
+            
+        self.last_patient_name = self.details['name']
+
+        patient_file.close()
+
+        
         self.classes = {'Covid Positive': 0, 'Healthy': 1, 'Other Infection': 2}
 
-        if str(self.last_patient_id) + '_scan.png' not in os.listdir('Patient Data/' + str(self.last_patient_id)):
+        self.img_no = len(os.listdir('Patient Data/' + self.last_patient_id)) - 1
+        
+        if self.last_patient_id + '_scan_' + str(self.img_no) +'.png' not in os.listdir('Patient Data/' + str(self.last_patient_id)):
             self.filepath = ''
 
         else:
-            self.filepath = 'Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_scan.png'
+            self.filepath = 'Patient Data/' + str(self.last_patient_id) + '/' + self.last_patient_id + '_scan_' + str(self.img_no) +'.png'
             
             self.show_image()
 
@@ -36,7 +57,7 @@ class ScanDetails_Page(tk.Frame):
         head.place(relx = 0.5, y = 20, anchor = tk.CENTER)
 
 
-        patient_id_lbl = tk.Label(self, text = "Patient Name :", font = ("bold", 10))
+        patient_id_lbl = tk.Label(self, text = "Patient ID :", font = ("bold", 10))
         patient_id_lbl.place(relx = 0.02, y = 60, anchor = tk.W)
 
         patient_id = tk.Label(self, text = self.last_patient_id, font = ("bold", 10))
@@ -50,36 +71,65 @@ class ScanDetails_Page(tk.Frame):
         patient_name_lbl.place(in_ = patient_name, relx = -0.1, rely = -0.1, anchor = tk.NE)
 
 
+        Change_btn = tk.Button(self, text = "Change Details", width = 20,
+                          command = lambda: self.change_details())
+        Change_btn.place(relx = 0.5 , y = 550, anchor = tk.CENTER)
+
+
         Choose_btn = tk.Button(self, text = "Choose File", width = 20,
                           command = lambda: self.add_file())
-        Choose_btn.place(relx = 0.5 , y = 550, anchor = tk.CENTER)
+        Choose_btn.place(relx = 0.5 , y = 590, anchor = tk.CENTER)
 
         
-        Predict_btn = tk.Button(self, text = "Predict", width = 20, bg = "Red",fg = 'white',
+        Predict_btn = tk.Button(self, text = "Predict", width = 20, bg = "blue",fg = 'white',
                           command=lambda: self.predict_n_save_file())
-        Predict_btn.place(relx = 0.5 , y = 590, anchor = tk.CENTER)
+        Predict_btn.place(relx = 0.5 , y = 630, anchor = tk.CENTER)
 
         
         Quit_btn = tk.Button(self, text = "Quit", width = 20,
                           command = lambda: [#self.destroy(),
                                              self.quit()])
-        Quit_btn.place(relx = 0.5 , y = 630, anchor = tk.CENTER)
+        Quit_btn.place(relx = 0.5 , y = 670, anchor = tk.CENTER)
 
 
 
-    def database(self):
-        self.conn = sqlite3.connect('Patient Data/Patients_covid_data.db')
+    def database_conn(self):
+        try:
+            self.conn = sqlite3.connect('Patient Data/Patients_covid_data.db')
+            
+            with self.conn:
+                self.cursor = self.conn.cursor()\
+                
+            return True
+
+        except:
+            messagebox.showerror('Database Connection Error', 'Please check if "Patients_covid_data.db" exists in "Patient Data/" Folder')
+            
+            return False
+
+
+
+    def get_latest_patient(self):        
+        database = self.database_conn()
         
-        with self.conn:
-            self.cursor = self.conn.cursor()
+        if database:
+            self.cursor.execute("SELECT Patient_ID, Full_Name FROM Patients_Data_Ovrview ORDER BY Patient_ID DESC LIMIT 1")
+            #print(cursor.fetchall()[0])
+            self.last_patient_id, self.last_patient_name = self.cursor.fetchall()[0]
+            #print(self.last_patient_id)
+
+            return self.last_patient_id, self.last_patient_name
+
+
+    def change_details(self):
+        from Registration_Page import Registration_Page
+
+        self.destroy()
+
+        prevWin = Registration_Page(patient_id = self.last_patient_id)
+        prevWin.pack()
+        prevWin.start()
         
-        self.cursor.execute("SELECT Patient_ID, Full_Name FROM Patients_Data_Ovrview ORDER BY Patient_ID DESC LIMIT 1")
-        #print(cursor.fetchall()[0])
-        self.last_patient_id, self.last_patient_name = self.cursor.fetchall()[0]
-        #print(self.last_patient_id)
-
-        return self.last_patient_id, self.last_patient_name
-
 
 
     def add_file(self):
@@ -114,22 +164,91 @@ class ScanDetails_Page(tk.Frame):
 
 
     def predict_n_save_file(self):
-        if self.filepath:
-            save_file = 'Patient Data/' + self.last_patient_id + '/' + self.last_patient_id+'_scan.png'
-            self.im.save(save_file)
+        if 'Model' in os.listdir():
             
-            patient_im = self.im_preprocess()
-
-            model = load_model('Model/model_resnet.h5')
+            if 'model_resnet.h5' in os.listdir('Model/'):
+                if self.filepath:
+                    self.save_filename = self.last_patient_id + '_scan_' + str(self.img_no + 1) +'.png'
+                    save_file = 'Patient Data/' + self.last_patient_id + '/' + self.save_filename
+                    self.im.save(save_file)
             
-            self.prediction = np.argmax(model.predict(patient_im), axis = -1)
-            #print(self.prediction)
+                    patient_im = self.im_preprocess()
 
-            self.prediction_class = list(self.classes.keys())[self.prediction[0]]
-            #print(self.prediction_class)
 
-            self.update_data()
-            self.NextPage()
+                    model = load_model('Model/model_resnet.h5')
+
+                    self.prediction = np.argmax(model.predict(patient_im), axis = -1)
+                    #print(self.prediction)
+
+                    self.prediction_class = list(self.classes.keys())[self.prediction[0]]
+                    #print(self.prediction_class)
+
+                    self.update_data()
+                    self.NextPage()
+
+            else:
+                messagebox.showerror('Model Not Found', 'Please check if "model_resnet.h5" exists in "Model/" Folder. If you have not downloaded it then download and place it in "Model/" Folder. The Link for downloading the model will be copied automatically')
+                
+                
+                self.clipboard_clear()
+                self.clipboard_append('https://drive.google.com/file/d/1Vs3bhtxgB_Wo0mUQ3VQD9jEbDSvPdqxk/view?usp=sharing')
+                self.update()
+
+                messagebox.showinfo('Link Copied', 'The Link to download the model has been copied to your clipboard. Paste it in your browser and download it into th "Model/" Folder')
+
+                #self.model_download()
+            
+            
+
+        else:
+            os.mkdir('Model')
+            
+            messagebox.showinfo('Model Download', 'Please Download "model_resnet.h5" and place it in "Model/" Folder. The Link for downloading the model will be copied automatically')
+            
+            self.clipboard_clear()
+            self.clipboard_append('https://drive.google.com/file/d/1Vs3bhtxgB_Wo0mUQ3VQD9jEbDSvPdqxk/view?usp=sharing')
+            self.update()
+
+            messagebox.showinfo('Link Copied', 'The Link to download the model has been copied to your clipboard. Paste it in your browser and download it into the "Model/" Folder.')
+
+            #self.model_download()
+
+
+
+    """
+    def model_download(self):
+        '''url = 'https://drive.google.com/file/d/1Vs3bhtxgB_Wo0mUQ3VQD9jEbDSvPdqxk/view?usp=sharing'
+        r = requests.get(url, allow_redirects=True)
+        open('Model/model_resnet.h5', 'wb').write(r.content)'''
+        from pydrive.auth import GoogleAuth
+        gauth = GoogleAuth(settings_file='../settings.yaml')
+        # Try to load saved client credentials
+        gauth.LoadCredentialsFile("../credentials.json")
+        if gauth.credentials is None:
+            # Authenticate if they're not there
+            gauth.LocalWebserverAuth()
+        elif gauth.access_token_expired:
+            # Refresh them if expired
+            gauth.Refresh()
+        else:
+            # Initialize the saved creds
+            gauth.Authorize()
+        # Save the current credentials to a file
+        gauth.SaveCredentialsFile("../credentials.json")
+
+        drive = GoogleDrive(gauth)
+        file_id = '1Vs3bhtxgB_Wo0mUQ3VQD9jEbDSvPdqxk'
+        download_dir = 'Model/'
+
+        #logger.debug("Trying to download file_id " + str(file_id))
+        file6 = drive.CreateFile({'id': file_id})
+        file6.GetContentFile(download_dir+'mapmob.zip')
+        zipfile.ZipFile(download_dir + 'test.zip').extractall(UNZIP_DIR)
+        tracking_data_location = download_dir + 'test.json'
+        return tracking_data_location
+        file_obj = drive.CreateFile({'id': '1Vs3bhtxgB_Wo0mUQ3VQD9jEbDSvPdqxk'})
+        file_obj.GetContentFile('model_resnet.h5')
+    """
 
 
 
@@ -151,34 +270,57 @@ class ScanDetails_Page(tk.Frame):
         #current_datetime_id = current_datetime_obj.strftime("%d%m%y%H%M%S")
         current_datetime = current_datetime_obj.strftime("%d/%b/%Y %H:%M:%S:%f")
         
-        self.cursor.execute('UPDATE Patients_Data_Ovrview SET COVID_status = ? WHERE patient_id = ?', (str(self.prediction_class), self.last_patient_id))
-        self.cursor.execute('UPDATE Patients_Data_Ovrview SET Modify_Time = ? WHERE patient_id = ?', (current_datetime, self.last_patient_id))
-        self.conn.commit()
-        self.conn.close()
+        try:
+            if bool(self.conn) and bool(self.cursor):
+                pass
 
-        with open('Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_data.json', 'r') as patient_file:
-            details = json.load(patient_file)
+            else:
+                database = self.database_conn()
 
-        #print(details)
+        except:
+            database = self.database_conn()
 
-        details['covid_status'] = self.prediction_class
-        details['modify_time'] = current_datetime
+        #print(self.details)
 
-        patient_file.close()
+        self.details['covid_status'] = list(self.details['covid_status'])
+        
+        if database:
+            if len(self.details['covid_status']) == 0:
+                self.cursor.execute('UPDATE Patients_Data_Ovrview SET first_COVID_status = ? WHERE patient_id = ?', (str(self.prediction_class), self.last_patient_id))
+                self.cursor.execute('UPDATE Patients_Data_Ovrview SET latest_COVID_status = ? WHERE patient_id = ?', (str(self.prediction_class), self.last_patient_id))
+
+            else:
+                self.cursor.execute('UPDATE Patients_Data_Ovrview SET latest_COVID_status = ? WHERE patient_id = ?', (str(self.prediction_class), self.last_patient_id))
+
+            self.cursor.execute('UPDATE Patients_Data_Ovrview SET Modify_Time = ? WHERE patient_id = ?', (current_datetime, self.last_patient_id))
+            self.conn.commit()
+            self.conn.close()
+
+
+        self.details['covid_status'].append(self.prediction_class)
+        
+        self.details['modify_time'] = current_datetime
+
+        self.details['covid_status_time'] = list(self.details['covid_status_time'])
+        self.details['covid_status_time'].append(current_datetime)
+
+        self.details['img_filenames'] = list(self.details['img_filenames'])
+        self.details['img_filenames'].append(self.save_filename)
+
 
         with open('Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_data.json', 'w') as patient_file:
-            json.dump(details, patient_file)
+            json.dump(self.details, patient_file)
 
         patient_file.close()
 
-        with open('Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_data.json', 'r') as patient_file:
-            details = json.load(patient_file)
 
-        #print(details)
+        #print(self.details)
 
 
 
     def NextPage(self):
+        self.destroy()
+
         nextWin = DisplayDetails_Page()
             
         nextWin.pack()

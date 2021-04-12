@@ -2,7 +2,7 @@
 
 import tkinter as tk
 import os
-
+from Registration_Page import Registration_Page
 
 class NewExistingUser(tk.Frame):
     def __init__(self, parent = None):
@@ -25,7 +25,6 @@ class NewExistingUser(tk.Frame):
 
 
     def RegistrationPage(self):
-        from Registration_Page import Registration_Page
         self.destroy()
         
         nextWin = Registration_Page()

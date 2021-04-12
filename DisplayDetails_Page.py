@@ -9,6 +9,7 @@ import json
 import requests
 #from ScanDetails_Page import ScanDetails_Page
 from tkinter import messagebox
+from tkinter.ttk import *
 
 
 
@@ -45,6 +46,10 @@ class DisplayDetails_Page(tk.Frame):
             self.last_patient_id, self.last_patient_name = self.database()
             self.patient_id_text = self.last_patient_id
             self.get_info()
+
+        
+        home_btn = tk.Button(self, text = "Home Page", command = lambda: self.go_home())
+        home_btn.place(relx = 0.5, y = 670, anchor = tk.CENTER)
 
 
 
@@ -93,10 +98,11 @@ class DisplayDetails_Page(tk.Frame):
             messagebox.showerror('Error','Cannot find patient_id : ' + str(self.patient_id_text) + '.\nPlease Enter Valid and Existing Patient ID.')
 
 
-        if self.patient_id_text:
-            self.patient_id_entry.delete(0, tk.END)
-            self.patient_id_text = tk.StringVar()
-            self.patient_id_entry.configure(textvar = self.patient_id_text)
+        if self.existing_patient:
+            if self.patient_id_text:
+                self.patient_id_entry.delete(0, tk.END)
+                self.patient_id_text = tk.StringVar()
+                self.patient_id_entry.configure(textvar = self.patient_id_text)
 
 
 
@@ -185,11 +191,100 @@ class DisplayDetails_Page(tk.Frame):
         country_.place(in_ = country_label, relx = 1, rely = -0.1)
 
 
-        cvd_stat_label = tk.Label(self,text = 'Covid Status', width = 30)
-        cvd_stat_label.place(relx = 0.4, y = 590, anchor = tk.CENTER)
+        first_cvd_stat_label = tk.Label(self,text = 'First Covid Status', width = 30)
+        first_cvd_stat_label.place(relx = 0.4, y = 590, anchor = tk.CENTER)
 
-        cvd_stat_ = tk.Label(self, text = str(self.details['covid_status']), bg = 'white', width = 30, font = ('bold', 10))
-        cvd_stat_.place(in_ = cvd_stat_label, relx = 1, rely = -0.1)
+        first_cvd_stat_ = tk.Label(self, text = str(self.details['covid_status'][0]), bg = self.bgcolor(str(self.details['covid_status'][0])), width = 30, font = ('bold', 10))
+        first_cvd_stat_.place(in_ = first_cvd_stat_label, relx = 1, rely = -0.1)
+
+
+        full_progress_btn = tk.Button(self, text = "Full Progression", command = lambda : self.full_progress_info())
+        full_progress_btn.place(in_ = first_cvd_stat_, relx = 1.14, rely = -0.1)
+
+
+        if len(self.details['covid_status']) > 1:
+            last = len(self.details['covid_status']) - 1
+
+            latest_cvd_stat_label = tk.Label(self,text = 'Latest Covid Status', width = 30)
+            latest_cvd_stat_label.place(relx = 0.4, y = 630, anchor = tk.CENTER)
+
+            latest_cvd_stat_ = tk.Label(self, text = str(self.details['covid_status'][last]), bg = self.bgcolor(str(self.details['covid_status'][last])), width = 30, font = ('bold', 10))
+            latest_cvd_stat_.place(in_ = latest_cvd_stat_label, relx = 1, rely = -0.1)
+
+
+        update_scan_btn = tk.Button(self, text = "Update Scan/Details", command = lambda : self.update_scan_details())
+        update_scan_btn.place(in_ = full_progress_btn, relx = -0.18, y = 30)
+
+
+
+    def bgcolor(self, text):
+        if 'covid' in text.lower():
+            return '#ffcccc'
+
+        elif 'healthy' in text.lower():
+            return '#ccff99'
+
+        else:
+            return '#ffffcc'
+
+
+
+    def update_scan_details(self):
+        self.destroy()
+
+        from ScanDetails_Page import ScanDetails_Page
+
+        prev_win = ScanDetails_Page(patient_id = str(self.details['patient_id']))
+        prev_win.pack()
+        prev_win.start()
+
+
+    
+    def full_progress_info(self):
+        self.id = 0
+        self.iid = 0
+
+        self.create_pop_up()
+
+    
+
+    def create_pop_up(self):
+        root = tk.Tk()
+        root.title('Full Patient Progression')
+        #root.geometry('700x200')
+
+        self.tree = Treeview(root, selectmode = "extended", columns = ('Status', 'Filename'))
+
+        self.tree.heading('#0', text = 'Time')
+        self.tree.heading('#1', text = 'Status')
+        self.tree.heading('#2', text = 'Filename')
+        self.tree.column('#0', stretch = tk.YES)
+        self.tree.column('#1', stretch = tk.YES)
+        self.tree.column('#2', minwidth = 0, width = 300, stretch = tk.YES)
+        self.tree.pack(expand = tk.YES, fill = tk.BOTH)
+
+
+        for i in range(len(self.details['covid_status_time'])):
+            self.tree.insert('', 'end', iid = self.iid, text = self.details['covid_status_time'][i],
+                                values = (self.details['covid_status'][i], 
+                                            self.details['img_filenames'][i]))
+            
+            self.iid = self.iid + 1
+            self.id = self.id + 1
+
+
+        root.mainloop()
+
+
+
+    def go_home(self):
+        self.destroy()
+
+        from NewExistingUser_Page import NewExistingUser
+
+        nextWin = NewExistingUser()
+        nextWin.pack()
+        nextWin.start()
 
 
 

@@ -1,3 +1,7 @@
 __pycache__/
 Patient*Data/
 Model/model_resnet.h5
+dist/
+build/
+install_build.py
+NewExistingUser_Page.spec
