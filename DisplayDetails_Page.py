@@ -14,7 +14,7 @@ from tkinter.ttk import *
 
 
 class DisplayDetails_Page(tk.Frame):
-    def __init__(self, parent = None, existing_patient = False, model_list = None):
+    def __init__(self, parent = None, existing_patient = False, patient_id = '', model_list = None):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
         
         head = tk.Label(self, text = "COVID-19 PREDICTION USING CT-SCANS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN, width = 1000)
@@ -40,6 +40,11 @@ class DisplayDetails_Page(tk.Frame):
 
             get_info_btn = tk.Button(self, text = "Get Information", command = lambda: self.get_info())
             get_info_btn.place(relx = 0.5, y = 120, anchor = tk.CENTER)
+
+        
+        elif bool(patient_id):
+            self.patient_id_text = patient_id
+            self.get_info()
 
 
         else:
@@ -227,8 +232,11 @@ class DisplayDetails_Page(tk.Frame):
         elif 'healthy' in text.lower():
             return '#ccff99'
 
-        else:
+        elif 'other' in text.lower():
             return '#ffffcc'
+
+        else:
+            return '#ccffff'
 
 
 

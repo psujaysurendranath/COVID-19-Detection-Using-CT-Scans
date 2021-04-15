@@ -22,11 +22,13 @@ class ScanDetails_Page(tk.Frame):
     def __init__(self, parent = None, patient_id = '', model_list = None):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
         
-        if not bool(patient_id):
+        self.update_patient = patient_id
+
+        if not bool(self.update_patient):
             self.last_patient_id, self.last_patient_name = self.get_latest_patient()
 
         else:
-            self.last_patient_id = patient_id
+            self.last_patient_id = self.update_patient
 
         with open('Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_data.json', 'r') as patient_file:
             self.details = json.load(patient_file)
@@ -287,6 +289,9 @@ class ScanDetails_Page(tk.Frame):
         
         database = None
         
+        database = self.database_conn()
+        
+        '''
         try:
             if bool(self.conn) and bool(self.cursor):
                 pass
@@ -296,6 +301,7 @@ class ScanDetails_Page(tk.Frame):
 
         except:
             database = self.database_conn()
+        '''
 
         #print(self.details)
 
@@ -306,15 +312,30 @@ class ScanDetails_Page(tk.Frame):
                 self.cursor.execute('UPDATE Patients_Data_Ovrview SET first_COVID_status = ? WHERE patient_id = ?', (str(self.prediction_class), self.last_patient_id))
                 self.cursor.execute('UPDATE Patients_Data_Ovrview SET latest_COVID_status = ? WHERE patient_id = ?', (str(self.prediction_class), self.last_patient_id))
 
+                self.details['covid_status'].append(self.prediction_class)
+
             else:
-                self.cursor.execute('UPDATE Patients_Data_Ovrview SET latest_COVID_status = ? WHERE patient_id = ?', (str(self.prediction_class), self.last_patient_id))
+                if self.prediction_class.lower() == 'healthy':
+                    if 'covid positive' in self.details['covid_status'][len(self.details['covid_status']) - 1].lower():
+                        self.cursor.execute('UPDATE Patients_Data_Ovrview SET latest_COVID_status = ? WHERE patient_id = ?', ('Recovered', self.last_patient_id))
+                        
+                        self.details['covid_status'].append("Recovered")
+                    
+                    else:
+                        self.cursor.execute('UPDATE Patients_Data_Ovrview SET latest_COVID_status = ? WHERE patient_id = ?', (str(self.prediction_class), self.last_patient_id))
+                        
+                        self.details['covid_status'].append(self.prediction_class)
+
+                else:
+                    self.cursor.execute('UPDATE Patients_Data_Ovrview SET latest_COVID_status = ? WHERE patient_id = ?', (str(self.prediction_class), self.last_patient_id))
+                        
+                    self.details['covid_status'].append(self.prediction_class)
+
 
             self.cursor.execute('UPDATE Patients_Data_Ovrview SET Modify_Time = ? WHERE patient_id = ?', (current_datetime, self.last_patient_id))
             self.conn.commit()
             self.conn.close()
 
-
-        self.details['covid_status'].append(self.prediction_class)
         
         self.details['modify_time'] = current_datetime
 
@@ -338,7 +359,11 @@ class ScanDetails_Page(tk.Frame):
     def NextPage(self):
         self.destroy()
 
-        nextWin = DisplayDetails_Page(model_list = self.model_list)
+        if bool(self.update_patient):
+            nextWin = DisplayDetails_Page(patient_id = self.update_patient, model_list = self.model_list)
+        
+        else:
+            nextWin = DisplayDetails_Page(model_list = self.model_list)
             
         nextWin.pack()
         nextWin.start()
