@@ -1,29 +1,25 @@
 # Author : Janvi D. Patil
 
-from tkinter import messagebox
-from google.protobuf import message
-import requests
-from pydrive.files import GoogleDriveFile
-from pydrive.drive import GoogleDrive
-import zipfile
+from tkinter import messagebox, filedialog
 import tkinter as tk
-import tkinter.filedialog
 import os
 from PIL import Image, ImageTk
-#import PIL
 import datetime
 import sqlite3
 import json
 import cv2
 import numpy as np
-from tensorflow.keras import models
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.models import load_model
+import threading
+import webbrowser
+#import requests
+#from pydrive.files import GoogleDriveFile
+#from pydrive.drive import GoogleDrive
 
 from DisplayDetails_Page import DisplayDetails_Page
 
 class ScanDetails_Page(tk.Frame):
-    def __init__(self, parent = None, patient_id = ''):
+    def __init__(self, parent = None, patient_id = '', model_list = None):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
         
         if not bool(patient_id):
@@ -92,13 +88,19 @@ class ScanDetails_Page(tk.Frame):
         Quit_btn.place(relx = 0.5 , y = 670, anchor = tk.CENTER)
 
 
+        if bool(model_list):
+            self.model_list = model_list
+            #self.model.join()
+            #print(self.model.predict())
+
+
 
     def database_conn(self):
         try:
             self.conn = sqlite3.connect('Patient Data/Patients_covid_data.db')
             
             with self.conn:
-                self.cursor = self.conn.cursor()\
+                self.cursor = self.conn.cursor()
                 
             return True
 
@@ -126,7 +128,7 @@ class ScanDetails_Page(tk.Frame):
 
         self.destroy()
 
-        prevWin = Registration_Page(patient_id = self.last_patient_id)
+        prevWin = Registration_Page(patient_id = self.last_patient_id, model_list = self.model_list)
         prevWin.pack()
         prevWin.start()
         
@@ -136,7 +138,7 @@ class ScanDetails_Page(tk.Frame):
         #global filepath
         self.filepath = tk.StringVar()
         
-        self.filepath = tk.filedialog.askopenfilename(defaultextension = ".png", filetypes = [("All files", "*.*"), ("images", "*.png")])
+        self.filepath = filedialog.askopenfilename(defaultextension = ".png", filetypes = [("All files", "*.*"), ("images", "*.png")])
         #print(filepath)
         
         #new_window = tkinter.Toplevel(root)
@@ -174,8 +176,22 @@ class ScanDetails_Page(tk.Frame):
             
                     patient_im = self.im_preprocess()
 
+                    
+                    try:
+                        model = self.model_list[0]
 
-                    model = load_model('Model/model_resnet.h5')
+                    except:
+                        self.model_list = list()
+            
+                        t2 = threading.Thread(target = lambda model, arg1 : model.append(load_model(arg1)), args = (self.model_list, 'Model/model_resnet.h5',))
+
+                        t2.start()
+
+                        t2.join()
+
+
+                        model = self.model_list[0]
+
 
                     self.prediction = np.argmax(model.predict(patient_im), axis = -1)
                     #print(self.prediction)
@@ -187,39 +203,38 @@ class ScanDetails_Page(tk.Frame):
                     self.NextPage()
 
             else:
-                messagebox.showerror('Model Not Found', 'Please check if "model_resnet.h5" exists in "Model/" Folder. If you have not downloaded it then download and place it in "Model/" Folder. The Link for downloading the model will be copied automatically')
+                messagebox.showerror('Model Not Found', 'Please check if "model_resnet.h5" exists in "Model/" Folder. If you have not downloaded it then download and place it in "Model/" Folder.')
                 
-                
-                self.clipboard_clear()
-                self.clipboard_append('https://drive.google.com/file/d/1Vs3bhtxgB_Wo0mUQ3VQD9jEbDSvPdqxk/view?usp=sharing')
-                self.update()
-
-                messagebox.showinfo('Link Copied', 'The Link to download the model has been copied to your clipboard. Paste it in your browser and download it into th "Model/" Folder')
-
-                #self.model_download()
-            
+                self.model_download()
             
 
         else:
             os.mkdir('Model')
             
-            messagebox.showinfo('Model Download', 'Please Download "model_resnet.h5" and place it in "Model/" Folder. The Link for downloading the model will be copied automatically')
-            
+            messagebox.showinfo('Model Download', 'Please Download "model_resnet.h5" and place it in "Model/" Folder.')
+
+            self.model_download()
+
+
+
+    
+    def model_download(self):
+        url = 'https://drive.google.com/file/d/1Vs3bhtxgB_Wo0mUQ3VQD9jEbDSvPdqxk/view?usp=sharing'
+
+        reply_browser = messagebox.askyesnocancel('Download Model', 'Do you want to open the link in browser?\nPress Yes to open in Browser.\nPress No to just copy the link in your clipboard\nPress cancel to close the pop-up')
+        
+        if reply_browser:
+            webbrowser.open(url, new = 0, autoraise = True)
+        
+        elif not reply_browser:
             self.clipboard_clear()
-            self.clipboard_append('https://drive.google.com/file/d/1Vs3bhtxgB_Wo0mUQ3VQD9jEbDSvPdqxk/view?usp=sharing')
+            self.clipboard_append(url)
             self.update()
 
-            messagebox.showinfo('Link Copied', 'The Link to download the model has been copied to your clipboard. Paste it in your browser and download it into the "Model/" Folder.')
+        
+        """
+        # Download model automatically(not working)
 
-            #self.model_download()
-
-
-
-    """
-    def model_download(self):
-        '''url = 'https://drive.google.com/file/d/1Vs3bhtxgB_Wo0mUQ3VQD9jEbDSvPdqxk/view?usp=sharing'
-        r = requests.get(url, allow_redirects=True)
-        open('Model/model_resnet.h5', 'wb').write(r.content)'''
         from pydrive.auth import GoogleAuth
         gauth = GoogleAuth(settings_file='../settings.yaml')
         # Try to load saved client credentials
@@ -248,7 +263,7 @@ class ScanDetails_Page(tk.Frame):
         return tracking_data_location
         file_obj = drive.CreateFile({'id': '1Vs3bhtxgB_Wo0mUQ3VQD9jEbDSvPdqxk'})
         file_obj.GetContentFile('model_resnet.h5')
-    """
+        """
 
 
 
@@ -269,6 +284,8 @@ class ScanDetails_Page(tk.Frame):
         current_datetime_obj = datetime.datetime.now()
         #current_datetime_id = current_datetime_obj.strftime("%d%m%y%H%M%S")
         current_datetime = current_datetime_obj.strftime("%d/%b/%Y %H:%M:%S:%f")
+        
+        database = None
         
         try:
             if bool(self.conn) and bool(self.cursor):
@@ -321,7 +338,7 @@ class ScanDetails_Page(tk.Frame):
     def NextPage(self):
         self.destroy()
 
-        nextWin = DisplayDetails_Page()
+        nextWin = DisplayDetails_Page(model_list = self.model_list)
             
         nextWin.pack()
         nextWin.start()

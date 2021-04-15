@@ -14,7 +14,7 @@ from tkinter.ttk import *
 
 
 class DisplayDetails_Page(tk.Frame):
-    def __init__(self, parent = None, existing_patient = False):
+    def __init__(self, parent = None, existing_patient = False, model_list = None):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
         
         head = tk.Label(self, text = "COVID-19 PREDICTION USING CT-SCANS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN, width = 1000)
@@ -50,6 +50,9 @@ class DisplayDetails_Page(tk.Frame):
         
         home_btn = tk.Button(self, text = "Home Page", command = lambda: self.go_home())
         home_btn.place(relx = 0.5, y = 670, anchor = tk.CENTER)
+
+        if bool(model_list):
+            self.model_list = model_list
 
 
 
@@ -234,7 +237,7 @@ class DisplayDetails_Page(tk.Frame):
 
         from ScanDetails_Page import ScanDetails_Page
 
-        prev_win = ScanDetails_Page(patient_id = str(self.details['patient_id']))
+        prev_win = ScanDetails_Page(patient_id = str(self.details['patient_id']), model_list = self.model_list)
         prev_win.pack()
         prev_win.start()
 
@@ -282,7 +285,7 @@ class DisplayDetails_Page(tk.Frame):
 
         from NewExistingUser_Page import NewExistingUser
 
-        nextWin = NewExistingUser()
+        nextWin = NewExistingUser(model_list = self.model_list)
         nextWin.pack()
         nextWin.start()
 

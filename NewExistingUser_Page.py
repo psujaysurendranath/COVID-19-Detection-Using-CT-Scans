@@ -2,10 +2,13 @@
 
 import tkinter as tk
 import os
+from tensorflow.keras.models import load_model
+import threading
+
 from Registration_Page import Registration_Page
 
 class NewExistingUser(tk.Frame):
-    def __init__(self, parent = None):
+    def __init__(self, parent = None, model_list = None):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
         
         head = tk.Label(self, text = "COVID-19 PREDICTION USING CT-SCANS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN, width = 1000)
@@ -21,13 +24,24 @@ class NewExistingUser(tk.Frame):
         exist_user_btn = tk.Button(text = "EXISTING USER", height = 2, width = 40, bg = "blue", fg = "white",
                                     command = lambda: self.ExistingUser())
         exist_user_btn.place(relx = 0.5, rely = 0.6, anchor = tk.CENTER)
+
+
+        if not(bool(model_list)):
+            self.model_list = list()
+            
+            t1 = threading.Thread(target = lambda model, arg1 : model.append(load_model(arg1)), args = (self.model_list, 'Model/model_resnet.h5',))
+
+            t1.start()
+
+        else:
+            self.model_list = model_list
         
 
 
     def RegistrationPage(self):
         self.destroy()
-        
-        nextWin = Registration_Page()
+
+        nextWin = Registration_Page(model_list = self.model_list)
 
         nextWin.pack()
         nextWin.start()
@@ -38,7 +52,7 @@ class NewExistingUser(tk.Frame):
         from DisplayDetails_Page import DisplayDetails_Page
         self.destroy()
         
-        nextWin = DisplayDetails_Page(existing_patient = True)
+        nextWin = DisplayDetails_Page(existing_patient = True, model_list = self.model_list)
             
         nextWin.pack()
         nextWin.start()

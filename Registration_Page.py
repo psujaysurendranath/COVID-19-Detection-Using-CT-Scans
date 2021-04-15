@@ -9,10 +9,12 @@ import os
 import datetime
 import re
 from tkinter.constants import ACTIVE
+from tensorflow.keras.models import load_model
+
 from ScanDetails_Page import ScanDetails_Page
 
 class Registration_Page(tk.Frame):
-    def __init__(self, parent = None, returning = False, patient_id = ''):
+    def __init__(self, parent = None, returning = False, patient_id = '', model_list = None):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
         
         self.middle_widg = ""
@@ -183,6 +185,10 @@ class Registration_Page(tk.Frame):
             self.Prev_btn = tk.Button(self, text = 'Home Page', width = 20,
                                 command = lambda: self.PreviousPage())
             self.Prev_btn.place(relx = 0.5, y = 650, anchor = tk.CENTER)
+
+
+        if bool(model_list):
+            self.model_list = model_list
 
 
     
@@ -552,7 +558,7 @@ class Registration_Page(tk.Frame):
 
         self.destroy()
 
-        prevWin = NewExistingUser()
+        prevWin = NewExistingUser(model_list = self.model_list)
 
         prevWin.pack()
         prevWin.start()
@@ -561,10 +567,10 @@ class Registration_Page(tk.Frame):
 
     def NextPage(self):
         if bool(self.update_patient):
-            nextWin = ScanDetails_Page(patient_id = self.update_patient)
+            nextWin = ScanDetails_Page(patient_id = self.update_patient, model_list = self.model_list)
 
         else:
-            nextWin = ScanDetails_Page()
+            nextWin = ScanDetails_Page(model_list = self.model_list)
         
         nextWin.pack()
         nextWin.start()
