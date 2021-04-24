@@ -4,7 +4,7 @@
 import tkinter as tk
 import sqlite3
 import json
-#import os
+import os
 #import datetime
 import requests
 #from ScanDetails_Page import ScanDetails_Page
@@ -19,6 +19,20 @@ class DisplayDetails_Page(tk.Frame):
         
         head = tk.Label(self, text = "COVID-19 PREDICTION USING CT-SCANS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN, width = 1000)
         head.place(relx = 0.5, y = 20, anchor = tk.CENTER)
+
+
+        appdata_path = str(os.getenv('APPDATA'))
+
+        try:
+            if 'Covid Detection CT' in os.listdir(appdata_path):
+                self.datapath = appdata_path + '/Covid Detection CT/'
+
+            elif 'Patient Data' in os.listdir():
+                self.datapath = ''
+
+        except:
+            if 'Patient Data' in os.listdir():
+                self.datapath = ''
         
         
         self.patient_id_text = tk.StringVar()
@@ -71,7 +85,7 @@ class DisplayDetails_Page(tk.Frame):
 
 
     def database(self):
-        self.conn = sqlite3.connect('Patient Data/Patients_covid_data.db')
+        self.conn = sqlite3.connect(self.datapath + 'Patient Data/Patients_covid_data.db')
         
         with self.conn:
             self.cursor = self.conn.cursor()
@@ -89,7 +103,7 @@ class DisplayDetails_Page(tk.Frame):
         if self.existing_patient:
             self.patient_id_text = self.patient_id_text.get()
         
-        data_folder = 'Patient Data/'
+        data_folder = self.datapath + 'Patient Data/'
         #details=lbl_text.get()
 
         #print(self.patient_id_text)

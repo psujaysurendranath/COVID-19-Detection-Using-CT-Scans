@@ -7,15 +7,28 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import sqlite3
 import os
+import webbrowser
 from tensorflow.keras.models import load_model
 import threading
 
-from Registration_Page import Registration_Page
+#from Registration_Page import Registration_Page
 
 class NewExistingUser(tk.Frame):
     def __init__(self, parent = None, model_list = None):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
-        
+
+        appdata_path = str(os.getenv('APPDATA'))
+
+        try:
+            if 'Covid Detection CT' not in os.listdir(appdata_path):
+                os.mkdir(appdata_path + '/Covid Detection CT')
+            
+            self.datapath = appdata_path + '/Covid Detection CT/'
+
+        except:
+            self.datapath = ''
+    
+
         head = tk.Label(self, text = "COVID-19 PREDICTION USING CT-SCANS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN, width = 1000)
         head.place(relx = 0.5, y = 20, anchor = tk.CENTER)
 
@@ -35,18 +48,37 @@ class NewExistingUser(tk.Frame):
 
 
         if not(bool(model_list)):
-            self.model_list = list()
-            
-            t1 = threading.Thread(target = lambda model, arg1 : model.append(load_model(arg1)), args = (self.model_list, 'Model/model_resnet.h5',))
+            try:
+                if 'model_resnet.h5' in os.listdir('Model/'):
+                    self.model_list = list()
+                    
+                    self.t1 = threading.Thread(target = lambda model, arg1 : model.append(load_model(arg1)), args = (self.model_list, 'Model/model_resnet.h5',))
 
-            t1.start()
+                    self.t1.start()
+
+                
+                else:
+                    os.mkdir('Model')
+            
+                    messagebox.showinfo('Model Download', 'Please Download "model_resnet.h5" and place it in "Model/" Folder.')
+
+                    self.model_download()
+
+
+            except:
+                os.mkdir('Model')
+            
+                messagebox.showinfo('Model Download', 'Please Download "model_resnet.h5" and place it in "Model/" Folder.')
+
+                self.model_download()
+
 
         else:
             self.model_list = model_list
             
         
         try:
-            if 'Patients_covid_data.db' in os.listdir('Patient Data'):
+            if 'Patients_covid_data.db' in os.listdir(self.datapath + 'Patient Data'):
                 curr_stat = tk.Button(text = "Current Statistics", 
                                         command = lambda: self.display_graph())
                 curr_stat.place(relx = 0.5, rely = 0.9, anchor = tk.CENTER)
@@ -58,6 +90,31 @@ class NewExistingUser(tk.Frame):
 
         except FileNotFoundError:
             pass
+
+
+        self.t3 = threading.Thread(target = self.importer)
+        self.t3.start()
+
+
+    
+    def importer(self):
+        from Registration_Page import Registration_Page as RegPage
+        self.Registration_Page = RegPage
+
+
+
+    def model_download(self):
+        url = 'https://drive.google.com/file/d/1Vs3bhtxgB_Wo0mUQ3VQD9jEbDSvPdqxk/view?usp=sharing'
+
+        reply_browser = messagebox.askyesnocancel('Download Model', 'Do you want to open the link in browser?\nPress Yes to open in Browser.\nPress No to just copy the link in your clipboard\nPress cancel to close the pop-up')
+        
+        if reply_browser:
+            webbrowser.open(url, new = 0, autoraise = True)
+        
+        elif not reply_browser:
+            self.clipboard_clear()
+            self.clipboard_append(url)
+            self.update()
 
 
     
@@ -129,7 +186,7 @@ class NewExistingUser(tk.Frame):
 
     def database_conn(self):
         try:
-            self.conn = sqlite3.connect('Patient Data/Patients_covid_data.db')
+            self.conn = sqlite3.connect(self.datapath + 'Patient Data/Patients_covid_data.db')
             
             with self.conn:
                 self.cursor = self.conn.cursor()
@@ -144,9 +201,12 @@ class NewExistingUser(tk.Frame):
 
 
     def RegistrationPage(self):
+        self.t1.join()
+        self.t3.join()
+
         self.destroy()
 
-        nextWin = Registration_Page(model_list = self.model_list)
+        nextWin = self.Registration_Page(model_list = self.model_list)
 
         nextWin.pack()
         nextWin.start()

@@ -10,8 +10,9 @@ import datetime
 import re
 from tkinter.constants import ACTIVE
 from tensorflow.keras.models import load_model
+import threading
 
-from ScanDetails_Page import ScanDetails_Page
+#from ScanDetails_Page import ScanDetails_Page
 
 class Registration_Page(tk.Frame):
     def __init__(self, parent = None, returning = False, patient_id = '', model_list = None):
@@ -178,6 +179,23 @@ class Registration_Page(tk.Frame):
         #self.Submit_btn.bind('<1>', Entrycheck)
 
 
+        self.t1 = threading.Thread(target = self.importer)
+        self.t1.start()
+
+
+        appdata_path = str(os.getenv('APPDATA'))
+
+        try:
+            if 'Covid Detection CT' not in os.listdir(appdata_path):
+                os.mkdir(appdata_path + '/Covid Detection CT')
+
+            self.datapath = appdata_path + '/Covid Detection CT/'
+
+
+        except:
+            self.datapath = ''
+
+
         if bool(self.update_patient):
             self.change_details()
 
@@ -187,8 +205,13 @@ class Registration_Page(tk.Frame):
             self.Prev_btn.place(relx = 0.5, y = 650, anchor = tk.CENTER)
 
 
-        if bool(model_list):
-            self.model_list = model_list
+        self.model_list = model_list
+
+
+    
+    def importer(self):
+        from ScanDetails_Page import ScanDetails_Page as ScanPage
+        self.ScanDetails_Page = ScanPage
 
 
     
@@ -312,7 +335,7 @@ class Registration_Page(tk.Frame):
 
 
     def change_details(self):
-        with open('Patient Data/' + str(self.update_patient) + '/' + str(self.update_patient) + '_data.json', 'r') as patient_file:
+        with open(self.datapath + 'Patient Data/' + str(self.update_patient) + '/' + str(self.update_patient) + '_data.json', 'r') as patient_file:
             self.details = json.load(patient_file)
 
 
@@ -398,8 +421,8 @@ class Registration_Page(tk.Frame):
         }
 
 
-        if 'Patient Data' not in os.listdir():
-            os.mkdir('Patient Data')
+        if 'Patient Data' not in os.listdir(self.datapath):
+            os.mkdir(self.datapath + 'Patient Data')
 
 
         
@@ -408,7 +431,7 @@ class Registration_Page(tk.Frame):
         details['create_time'], details['modify_time'], details['patient_id'] = self.database(details)
 
         
-        data_folder = 'Patient Data/'
+        data_folder = self.datapath + 'Patient Data/'
 
 
         #if details['name'] not in os.listdir(data_folder):
@@ -464,7 +487,7 @@ class Registration_Page(tk.Frame):
         update_details['modify_time'] = current_datetime
 
 
-        data_folder = 'Patient Data/'
+        data_folder = self.datapath + 'Patient Data/'
 
 
         #print(details)
@@ -488,7 +511,7 @@ class Registration_Page(tk.Frame):
 
 
     def database(self, details):
-        conn = sqlite3.connect('Patient Data/Patients_covid_data.db')
+        conn = sqlite3.connect(self.datapath + 'Patient Data/Patients_covid_data.db')
         
         with conn:
             cursor = conn.cursor()
@@ -532,7 +555,7 @@ class Registration_Page(tk.Frame):
 
     
     def update_database(self, details):
-        conn = sqlite3.connect('Patient Data/Patients_covid_data.db')
+        conn = sqlite3.connect(self.datapath + 'Patient Data/Patients_covid_data.db')
         
         with conn:
             cursor = conn.cursor()
@@ -566,11 +589,12 @@ class Registration_Page(tk.Frame):
 
 
     def NextPage(self):
+        self.t1.join()
         if bool(self.update_patient):
-            nextWin = ScanDetails_Page(patient_id = self.update_patient, model_list = self.model_list)
+            nextWin = self.ScanDetails_Page(patient_id = self.update_patient, model_list = self.model_list)
 
         else:
-            nextWin = ScanDetails_Page(model_list = self.model_list)
+            nextWin = self.ScanDetails_Page(model_list = self.model_list)
         
         nextWin.pack()
         nextWin.start()

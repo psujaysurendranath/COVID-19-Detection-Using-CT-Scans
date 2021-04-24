@@ -22,6 +22,21 @@ class ScanDetails_Page(tk.Frame):
     def __init__(self, parent = None, patient_id = '', model_list = None):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
         
+        
+        appdata_path = str(os.getenv('APPDATA'))
+
+        try:
+            if 'Covid Detection CT' in os.listdir(appdata_path):
+                self.datapath = appdata_path + '/Covid Detection CT/'
+
+            elif 'Patient Data' in os.listdir():
+                self.datapath = ''
+
+        except:
+            if 'Patient Data' in os.listdir():
+                self.datapath = ''
+
+        
         self.update_patient = patient_id
 
         if not bool(self.update_patient):
@@ -30,7 +45,8 @@ class ScanDetails_Page(tk.Frame):
         else:
             self.last_patient_id = self.update_patient
 
-        with open('Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_data.json', 'r') as patient_file:
+
+        with open(self.datapath + 'Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_data.json', 'r') as patient_file:
             self.details = json.load(patient_file)
             
         self.last_patient_name = self.details['name']
@@ -40,13 +56,13 @@ class ScanDetails_Page(tk.Frame):
         
         self.classes = {'Covid Positive': 0, 'Healthy': 1, 'Other Infection': 2}
 
-        self.img_no = len(os.listdir('Patient Data/' + self.last_patient_id)) - 1
+        self.img_no = len(os.listdir(self.datapath + 'Patient Data/' + self.last_patient_id)) - 1
         
-        if self.last_patient_id + '_scan_' + str(self.img_no) +'.png' not in os.listdir('Patient Data/' + str(self.last_patient_id)):
+        if self.last_patient_id + '_scan_' + str(self.img_no) +'.png' not in os.listdir(self.datapath + 'Patient Data/' + str(self.last_patient_id)):
             self.filepath = ''
 
         else:
-            self.filepath = 'Patient Data/' + str(self.last_patient_id) + '/' + self.last_patient_id + '_scan_' + str(self.img_no) +'.png'
+            self.filepath = self.datapath + 'Patient Data/' + str(self.last_patient_id) + '/' + self.last_patient_id + '_scan_' + str(self.img_no) +'.png'
             
             self.show_image()
 
@@ -99,7 +115,7 @@ class ScanDetails_Page(tk.Frame):
 
     def database_conn(self):
         try:
-            self.conn = sqlite3.connect('Patient Data/Patients_covid_data.db')
+            self.conn = sqlite3.connect(self.datapath + 'Patient Data/Patients_covid_data.db')
             
             with self.conn:
                 self.cursor = self.conn.cursor()
@@ -173,7 +189,7 @@ class ScanDetails_Page(tk.Frame):
             if 'model_resnet.h5' in os.listdir('Model/'):
                 if self.filepath:
                     self.save_filename = self.last_patient_id + '_scan_' + str(self.img_no + 1) +'.png'
-                    save_file = 'Patient Data/' + self.last_patient_id + '/' + self.save_filename
+                    save_file = self.datapath + 'Patient Data/' + self.last_patient_id + '/' + self.save_filename
                     self.im.save(save_file)
             
                     patient_im = self.im_preprocess()
@@ -346,7 +362,7 @@ class ScanDetails_Page(tk.Frame):
         self.details['img_filenames'].append(self.save_filename)
 
 
-        with open('Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_data.json', 'w') as patient_file:
+        with open(self.datapath + 'Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_data.json', 'w') as patient_file:
             json.dump(self.details, patient_file)
 
         patient_file.close()
