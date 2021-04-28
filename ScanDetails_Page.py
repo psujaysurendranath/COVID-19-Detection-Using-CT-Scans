@@ -57,14 +57,18 @@ class ScanDetails_Page(tk.Frame):
         self.classes = {'Covid Positive': 0, 'Healthy': 1, 'Other Infection': 2}
 
         self.img_no = len(os.listdir(self.datapath + 'Patient Data/' + self.last_patient_id)) - 1
+
+        if self.img_no > 1:
+            self.img_nxt_btn = tk.Button(self, text = ">", command = lambda: self.chng_img('+'))
+            
+            self.img_prev_btn = tk.Button(self, text = "<", command = lambda: self.chng_img('-'))
         
         if self.last_patient_id + '_scan_' + str(self.img_no) +'.png' not in os.listdir(self.datapath + 'Patient Data/' + str(self.last_patient_id)):
             self.filepath = ''
 
         else:
             self.filepath = self.datapath + 'Patient Data/' + str(self.last_patient_id) + '/' + self.last_patient_id + '_scan_' + str(self.img_no) +'.png'
-            
-            self.show_image()
+            self.pred_disable = True
 
 
         head = tk.Label(self, text = "COVID-19 PREDICTION USING CT-SCANS", font = "comicsansms 19 bold", bg = "black", fg = "white", padx = 5, pady = 5, relief = tk.SUNKEN, width = 1000)
@@ -95,9 +99,13 @@ class ScanDetails_Page(tk.Frame):
         Choose_btn.place(relx = 0.5 , y = 590, anchor = tk.CENTER)
 
         
-        Predict_btn = tk.Button(self, text = "Predict", width = 20, bg = "blue",fg = 'white',
+        self.Predict_btn = tk.Button(self, text = "Predict", width = 20, bg = "blue",fg = 'white',
                           command=lambda: self.predict_n_save_file())
-        Predict_btn.place(relx = 0.5 , y = 630, anchor = tk.CENTER)
+        self.Predict_btn.place(relx = 0.5 , y = 630, anchor = tk.CENTER)
+
+        if self.pred_disable:
+            self.Predict_btn.config(state = 'disable')
+            self.show_image()
 
         
         Quit_btn = tk.Button(self, text = "Quit", width = 20,
@@ -170,6 +178,43 @@ class ScanDetails_Page(tk.Frame):
 
 
     
+    def chng_img(self, chng):
+        if chng == '+':
+            img_no = int(self.filepath[-5])
+            if img_no + 1 > len(os.listdir(self.datapath + 'Patient Data/' + self.last_patient_id)) - 1:
+                pass
+
+            else:
+                img_no += 1
+
+                self.filepath = self.filepath[0:-5] + str(img_no) + '.png'
+
+                #print(self.filepath[0:-5] + str(img_no) + '.png')
+
+                #print(self.filepath)
+
+                self.show_image()
+
+
+        elif chng == '-':
+            img_no = int(self.filepath[-5])
+            if img_no - 1 < 1:
+                pass
+
+            else:
+                img_no -= 1
+
+                self.filepath = self.filepath[0:-5] + str(img_no) + '.png'
+
+                #print(self.filepath[-33:])
+                #print(self.filepath[0:-5] + str(img_no) + '.png')
+
+                #print(self.filepath)
+
+                self.show_image()
+
+
+    
     def show_image(self):
         if self.filepath:
             self.im = Image.open(self.filepath)
@@ -177,9 +222,47 @@ class ScanDetails_Page(tk.Frame):
             #im.save('Patient Data/' + self.last_patient_id + '/' + self.last_patient_id+'_scan.png')
             tkimage = ImageTk.PhotoImage(self.im)
             
-            mylabel = tk.Label(self, image = tkimage)
-            mylabel.image = tkimage
-            mylabel.place(relx = 0.5, rely = 0.43, anchor = tk.CENTER)
+            imglabel = tk.Label(self, image = tkimage)
+            imglabel.image = tkimage
+            imglabel.place(relx = 0.5, rely = 0.43, anchor = tk.CENTER)
+
+            #imglabel = tk.Label(self)
+            #imglabel.place(relx = 0.5, rely = 0.43, anchor = tk.CENTER)
+
+
+            if self.datapath + 'Patient Data/' not in self.filepath:
+                self.pred_disable = False
+
+                self.Predict_btn.config(state = 'normal')
+
+                if self.img_no > 1:
+                    self.img_nxt_btn.config(state = 'disabled')
+                    self.img_prev_btn.config(state = 'disabled')
+
+            else:
+                self.pred_disable = True
+
+                self.Predict_btn.config(state = 'disabled')
+
+
+                if self.img_no > 1:
+                    self.img_nxt_btn.place(in_ = imglabel, relx = 1.01, y = 222)
+                    self.img_prev_btn.place(in_ = imglabel, x = -25, y = 222)
+
+
+                    img_no = int(self.filepath[-5])
+                    if img_no + 1 > len(os.listdir(self.datapath + 'Patient Data/' + self.last_patient_id)) - 1:
+                        self.img_nxt_btn.config(state = 'disabled')
+
+                    else:
+                        self.img_nxt_btn.config(state = 'normal')
+
+
+                    if img_no - 1 < 1:
+                        self.img_prev_btn.config(state = 'disabled')
+
+                    else:
+                        self.img_prev_btn.config(state = 'normal')
 
 
 

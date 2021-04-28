@@ -214,6 +214,8 @@ class NewExistingUser(tk.Frame):
     
 
     def ExistingUser(self):
+        self.t1.join()
+        
         from DisplayDetails_Page import DisplayDetails_Page
         self.destroy()
         
