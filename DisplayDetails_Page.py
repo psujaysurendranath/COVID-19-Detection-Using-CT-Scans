@@ -73,6 +73,13 @@ class DisplayDetails_Page(tk.Frame):
         if bool(model_list):
             self.model_list = model_list
 
+        
+                
+        if 'Patient Data' in os.listdir(self.datapath):
+            if len(os.listdir(self.datapath + 'Patient Data')) != 0:
+                all_ptnt_btn = tk.Button(self, text = "Show All Patients", command = lambda: self.show_patients())
+                all_ptnt_btn.place(relx = 0.8, y = 80, anchor = tk.CENTER)
+
 
 
     def patient_id_callback(self, P, n):
@@ -82,20 +89,35 @@ class DisplayDetails_Page(tk.Frame):
         else:
             return False
 
+    
+
+    def database_conn(self):
+        try:
+            self.conn = sqlite3.connect(self.datapath + 'Patient Data/Patients_covid_data.db')
+            
+            with self.conn:
+                self.cursor = self.conn.cursor()
+                
+            return True
+
+        except:
+            messagebox.showerror('Database Connection Error', 'Please check if "Patients_covid_data.db" exists in "Patient Data/" Folder')
+            
+            return False
+
 
 
     def database(self):
-        self.conn = sqlite3.connect(self.datapath + 'Patient Data/Patients_covid_data.db')
-        
-        with self.conn:
-            self.cursor = self.conn.cursor()
-        
-        self.cursor.execute("SELECT Patient_ID, Full_Name FROM Patients_Data_Ovrview ORDER BY Patient_ID DESC LIMIT 1")
-        #print(cursor.fetchall()[0])
-        self.last_patient_id, self.last_patient_name = self.cursor.fetchall()[0]
-        #print(self.last_patient_id)
+        database = self.database_conn()
 
-        return self.last_patient_id, self.last_patient_name
+        if database:
+        
+            self.cursor.execute("SELECT Patient_ID, Full_Name FROM Patients_Data_Ovrview ORDER BY Patient_ID DESC LIMIT 1")
+            #print(cursor.fetchall()[0])
+            self.last_patient_id, self.last_patient_name = self.cursor.fetchall()[0]
+            #print(self.last_patient_id)
+
+            return self.last_patient_id, self.last_patient_name
 
 
 
@@ -299,6 +321,60 @@ class DisplayDetails_Page(tk.Frame):
 
 
         root.mainloop()
+
+
+
+    def show_patients(self):
+        root = tk.Tk()
+        root.title('All Patients')
+        #root.geometry('700x200')
+
+        self.tree2 = Treeview(root, selectmode = "extended", columns = ('Status', 'Filename'))
+
+        self.tree2.heading('#0', text = 'Patient ID')
+        self.tree2.heading('#1', text = 'Patient Name')
+        self.tree2.heading('#2', text = 'Covid Status')
+        self.tree2.column('#0', stretch = tk.YES)
+        self.tree2.column('#1', stretch = tk.YES)
+        self.tree2.column('#2', stretch = tk.YES)
+        self.tree2.pack(expand = tk.YES, fill = tk.BOTH)
+
+        database = self.database_conn()
+
+        if database:
+            self.id = 0
+            self.iid = 0
+
+            for ptnt_id in list(os.listdir(self.datapath + 'Patient Data')):
+                if ptnt_id.lower() == 'patients_covid_data.db':
+                    continue
+
+                self.cursor.execute("SELECT Full_Name, latest_COVID_status FROM Patients_Data_Ovrview WHERE Patient_ID = ?", (str(ptnt_id),))
+                name, status = self.cursor.fetchall()[0]
+
+                self.tree2.insert('', 'end', iid = self.iid, text = ptnt_id,
+                                    values = (name, status))
+                
+                self.iid = self.iid + 1
+                self.id = self.id + 1
+
+        self.tree2.bind('<ButtonRelease-1>', self.ptnts_selectItem)
+                
+
+        root.mainloop()
+
+
+    def ptnts_selectItem(self, a):
+        curItem = self.tree2.focus()
+        #print(self.tree2.item(curItem))
+
+        patient_id = self.tree2.item(curItem)['text']
+        
+        self.clipboard_clear()
+        self.clipboard_append(patient_id)
+        self.update()
+
+        messagebox.showinfo('Copied', 'Patient ID copied to clipboard')
 
 
 

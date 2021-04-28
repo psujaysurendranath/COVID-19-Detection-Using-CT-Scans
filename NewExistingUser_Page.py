@@ -47,6 +47,17 @@ class NewExistingUser(tk.Frame):
         exist_user_btn.place(relx = 0.5, rely = 0.6, anchor = tk.CENTER)
 
 
+        if 'Patient Data' in os.listdir(self.datapath):
+            if len(os.listdir(self.datapath + 'Patient Data')) == 0:
+                exist_user_btn.config(state = 'disabled')
+
+            else:
+                exist_user_btn.config(state = 'normal')
+
+        else:
+            exist_user_btn.config(state = 'disabled')
+
+
         if not(bool(model_list)):
             try:
                 if 'model_resnet.h5' in os.listdir('Model/'):
