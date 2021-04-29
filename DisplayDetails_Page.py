@@ -10,6 +10,7 @@ import requests
 #from ScanDetails_Page import ScanDetails_Page
 from tkinter import messagebox
 from tkinter.ttk import *
+from appdirs import user_data_dir
 
 
 
@@ -21,9 +22,11 @@ class DisplayDetails_Page(tk.Frame):
         head.place(relx = 0.5, y = 20, anchor = tk.CENTER)
 
 
-        appdata_path = str(os.getenv('APPDATA'))
+        #appdata_path = str(os.getenv('APPDATA'))
 
         try:
+            appdata_path = str(user_data_dir())
+
             if 'Covid Detection CT' in os.listdir(appdata_path):
                 self.datapath = appdata_path + '/Covid Detection CT/'
 
@@ -123,7 +126,11 @@ class DisplayDetails_Page(tk.Frame):
 
     def get_info(self):
         if self.existing_patient:
-            self.patient_id_text = self.patient_id_text.get()
+            if len(self.patient_id_text.get()) != 0:
+                self.patient_id_text = self.patient_id_text.get()
+            
+            else:
+                self.patient_id_text = tk.StringVar()
         
         data_folder = self.datapath + 'Patient Data/'
         #details=lbl_text.get()
@@ -370,11 +377,15 @@ class DisplayDetails_Page(tk.Frame):
 
         patient_id = self.tree2.item(curItem)['text']
         
-        self.clipboard_clear()
-        self.clipboard_append(patient_id)
-        self.update()
+        try:
+            self.clipboard_clear()
+            self.clipboard_append(patient_id)
+            self.update()
 
-        messagebox.showinfo('Copied', 'Patient ID copied to clipboard')
+            messagebox.showinfo('Copied', 'Patient ID copied to clipboard')
+        
+        except:
+            pass
 
 
 

@@ -11,6 +11,7 @@ import re
 from tkinter.constants import ACTIVE
 from tensorflow.keras.models import load_model
 import threading
+from appdirs import user_data_dir
 
 #from ScanDetails_Page import ScanDetails_Page
 
@@ -183,9 +184,11 @@ class Registration_Page(tk.Frame):
         self.t1.start()
 
 
-        appdata_path = str(os.getenv('APPDATA'))
+        #appdata_path = str(os.getenv('APPDATA'))
 
         try:
+            appdata_path = str(user_data_dir())
+
             if 'Covid Detection CT' not in os.listdir(appdata_path):
                 os.mkdir(appdata_path + '/Covid Detection CT')
 

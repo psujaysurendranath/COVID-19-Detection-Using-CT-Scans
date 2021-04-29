@@ -10,6 +10,7 @@ import os
 import webbrowser
 from tensorflow.keras.models import load_model
 import threading
+from appdirs import user_data_dir
 
 #from Registration_Page import Registration_Page
 
@@ -17,9 +18,13 @@ class NewExistingUser(tk.Frame):
     def __init__(self, parent = None, model_list = None):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
 
-        appdata_path = str(os.getenv('APPDATA'))
+        # Works only for Windows
+        #appdata_path = str(os.getenv('APPDATA'))
+            
 
         try:
+            appdata_path = str(user_data_dir())
+
             if 'Covid Detection CT' not in os.listdir(appdata_path):
                 os.mkdir(appdata_path + '/Covid Detection CT')
             
@@ -212,7 +217,12 @@ class NewExistingUser(tk.Frame):
 
 
     def RegistrationPage(self):
-        self.t1.join()
+        try:
+            self.t1.join()
+
+        except:
+            pass
+        
         self.t3.join()
 
         self.destroy()
@@ -225,7 +235,11 @@ class NewExistingUser(tk.Frame):
     
 
     def ExistingUser(self):
-        self.t1.join()
+        try:
+            self.t1.join()
+
+        except:
+            pass
         
         from DisplayDetails_Page import DisplayDetails_Page
         self.destroy()

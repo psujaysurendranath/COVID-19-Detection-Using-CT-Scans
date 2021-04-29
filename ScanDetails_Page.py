@@ -12,6 +12,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 import threading
 import webbrowser
+from appdirs import user_data_dir
 #import requests
 #from pydrive.files import GoogleDriveFile
 #from pydrive.drive import GoogleDrive
@@ -23,9 +24,11 @@ class ScanDetails_Page(tk.Frame):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
         
         
-        appdata_path = str(os.getenv('APPDATA'))
+        #appdata_path = str(os.getenv('APPDATA'))
 
         try:
+            appdata_path = str(user_data_dir())
+
             if 'Covid Detection CT' in os.listdir(appdata_path):
                 self.datapath = appdata_path + '/Covid Detection CT/'
 
@@ -45,6 +48,9 @@ class ScanDetails_Page(tk.Frame):
         else:
             self.last_patient_id = self.update_patient
 
+            rtrn_btn = tk.Button(self, text = "Show Details", width = 20, command = lambda: self.NextPage())
+            rtrn_btn.place(relx = 0.5 , y = 670, anchor = tk.CENTER)            
+
 
         with open(self.datapath + 'Patient Data/' + str(self.last_patient_id) + '/' + str(self.last_patient_id) + '_data.json', 'r') as patient_file:
             self.details = json.load(patient_file)
@@ -57,6 +63,10 @@ class ScanDetails_Page(tk.Frame):
         self.classes = {'Covid Positive': 0, 'Healthy': 1, 'Other Infection': 2}
 
         self.img_no = len(os.listdir(self.datapath + 'Patient Data/' + self.last_patient_id)) - 1
+
+
+        self.pred_disable = False
+
 
         if self.img_no > 1:
             self.img_nxt_btn = tk.Button(self, text = ">", command = lambda: self.chng_img('+'))
@@ -108,10 +118,10 @@ class ScanDetails_Page(tk.Frame):
             self.show_image()
 
         
-        Quit_btn = tk.Button(self, text = "Quit", width = 20,
-                          command = lambda: [#self.destroy(),
-                                             self.quit()])
-        Quit_btn.place(relx = 0.5 , y = 670, anchor = tk.CENTER)
+        #Quit_btn = tk.Button(self, text = "Quit", width = 20,
+        #                  command = lambda: [#self.destroy(),
+        #                                     self.quit()])
+        #Quit_btn.place(relx = 0.5 , y = 670, anchor = tk.CENTER)
 
 
         if bool(model_list):

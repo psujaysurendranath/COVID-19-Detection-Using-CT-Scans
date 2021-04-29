@@ -1,8 +1,9 @@
-opencv_python==4.5.1.48
-numpy==1.19.2
-matplotlib==3.3.2
 tensorflow_cpu==2.4.1
+opencv_python==4.5.1.48
+matplotlib==3.3.2
 requests==2.24.0
+numpy==1.19.2
+appdirs==1.4.4
 Pillow==8.2.0
 PyInstaller==4.3
 tensorflow==2.4.1
