@@ -22,7 +22,8 @@ class DisplayDetails_Page(tk.Frame):
         head.place(relx = 0.5, y = 20, anchor = tk.CENTER)
 
 
-        #appdata_path = str(os.getenv('APPDATA'))
+        # Works only for Windows
+        #appdata_path = str(os.getenv('LOCALAPPDATA'))
 
         try:
             appdata_path = str(user_data_dir())

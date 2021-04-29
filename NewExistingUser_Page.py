@@ -19,7 +19,7 @@ class NewExistingUser(tk.Frame):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
 
         # Works only for Windows
-        #appdata_path = str(os.getenv('APPDATA'))
+        #appdata_path = str(os.getenv('LOCALAPPDATA'))
             
 
         try:

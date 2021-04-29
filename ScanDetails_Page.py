@@ -24,7 +24,8 @@ class ScanDetails_Page(tk.Frame):
         tk.Frame.__init__(self, parent, width = 1000, height = 700)
         
         
-        #appdata_path = str(os.getenv('APPDATA'))
+        # Works only for Windows
+        #appdata_path = str(os.getenv('LOCALAPPDATA'))
 
         try:
             appdata_path = str(user_data_dir())
